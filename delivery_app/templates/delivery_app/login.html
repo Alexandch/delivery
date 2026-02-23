@@ -1,0 +1,558 @@
+{% extends "delivery_app/base.html" %}
+
+{% block title %}
+Вход
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo">🔐</div>
+            <h1>Вход в систему</h1>
+            <p>Дата: {{ current_date }} | Временная зона: {{ timezone }}</p>
+        </div>
+
+        <div class="auth-body">
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    <span>
+                        {% if message.tags == 'success' %}✅
+                        {% elif message.tags == 'error' %}❌
+                        {% elif message.tags == 'warning' %}⚠️
+                        {% else %}ℹ️{% endif %}
+                    </span>
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" class="auth-form">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                <div class="alert alert-error">
+                    <span>❌</span>
+                    <div>
+                        <strong>Ошибка входа:</strong>
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <div>{{ field.label }}: {{ error }}</div>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="form-grid">
+                    {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}" class="form-label">
+                            {{ field.label }}
+                            {% if field.field.required %}<span class="required">*</span>{% endif %}
+                        </label>
+                        {{ field }}
+                        {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="remember_me">
+                        <span class="checkmark"></span>
+                        Запомнить меня
+                    </label>
+                    <a href="#" class="forgot-password">Забыли пароль?</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-large btn-block">
+                    <span>🚪</span> Войти
+                </button>
+            </form>
+
+            <div class="auth-divider">
+                <span>или</span>
+            </div>
+
+            <div class="social-auth">
+                <button class="btn btn-outline btn-block social-btn">
+                    <span>📘</span> Войти через ВКонтакте
+                </button>
+                <button class="btn btn-outline btn-block social-btn">
+                    <span>📧</span> Войти через Telegram
+                </button>
+            </div>
+
+            <div class="auth-footer">
+                <p>Нет аккаунта? <a href="{% url 'delivery_app:register' %}" class="auth-link">Зарегистрируйтесь</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Дополнительная информация -->
+    <div class="login-info">
+        <div class="card">
+            <div class="card-header">
+                <h3>🌟 Преимущества</h3>
+            </div>
+            <div class="card-body">
+                <div class="benefits-list">
+                    <div class="benefit-item">
+                        <span class="benefit-icon">🚚</span>
+                        <div class="benefit-text">
+                            <strong>Быстрая доставка</strong>
+                            <p>В течение 2 часов по городу</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">🍎</span>
+                        <div class="benefit-text">
+                            <strong>Свежие продукты</strong>
+                            <p>Только качественные товары</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <span class="benefit-icon">💰</span>
+                        <div class="benefit-text">
+                            <strong>Лучшие цены</strong>
+                            <p>Регулярные акции и скидки</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Специфичные стили для страницы входа */
+.auth-container {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 30px;
+    align-items: start;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.auth-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+
+.auth-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: #a3d3ff;
+    text-align: center;
+    padding: 30px;
+}
+
+.auth-header h1 {
+    color: #a3d3ff;
+    margin-bottom: 10px;
+    font-size: 1.8em;
+}
+
+.auth-header p {
+    color: #a3d3ff;
+    margin-bottom: 0;
+    font-size: 0.9em;
+}
+
+.auth-logo {
+    font-size: 3em;
+    margin-bottom: 15px;
+}
+
+.auth-body {
+    padding: 30px;
+}
+
+.auth-form {
+    margin-bottom: 20px;
+}
+
+.form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.required {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.form-control {
+    padding: 12px 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1em;
+    transition: all 0.3s ease;
+    background: white;
+    width: 100%;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
+}
+
+.form-text {
+    font-size: 0.875em;
+    color: var(--text-light);
+    margin-top: 5px;
+}
+
+/* Стили для опций формы */
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+
+.checkbox-label input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border-color);
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 12px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.forgot-password {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 0.9em;
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+}
+
+/* Кнопки */
+.btn-block {
+    width: 100%;
+    justify-content: center;
+}
+
+/* Разделитель */
+.auth-divider {
+    text-align: center;
+    margin: 25px 0;
+    position: relative;
+}
+
+.auth-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--border-color);
+}
+
+.auth-divider span {
+    background: white;
+    padding: 0 15px;
+    color: var(--text-light);
+    font-size: 0.9em;
+}
+
+/* Социальные кнопки */
+.social-auth {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.social-btn {
+    border-color: var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.social-btn:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+/* Футер авторизации */
+.auth-footer {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.auth-link {
+    color: var(--primary-color);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-link:hover {
+    text-decoration: underline;
+}
+
+/* Блок с дополнительной информацией */
+.login-info {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.login-info .card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+}
+.login-info .card-header h3{
+    color: #a3d3ff;
+}
+/* Стили для преимуществ */
+.benefits-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+}
+
+.benefit-icon {
+    font-size: 1.5em;
+    flex-shrink: 0;
+}
+
+.benefit-text strong {
+    display: block;
+    color: var(--primary-color);
+    margin-bottom: 4px;
+}
+
+.benefit-text p {
+    margin: 0;
+    font-size: 0.9em;
+    color: var(--text-light);
+}
+
+/* Стили для алертов */
+.alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid;
+}
+
+.alert-error {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.1);
+    border-color: var(--secondary-color);
+    color: #155724;
+}
+
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.alert-info {
+    background-color: rgba(23, 162, 184, 0.1);
+    border-color: #17a2b8;
+    color: #0c5460;
+}
+
+/* Анимации */
+.auth-card {
+    animation: slideInLeft 0.6s ease-out;
+}
+
+.login-info .card {
+    animation: slideInRight 0.6s ease-out 0.2s both;
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Стили для карточек */
+.card-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: rgb(58, 58, 58);
+    padding: 20px;
+}
+
+.card-header h2,
+.card-header h3 {
+    color: rgb(87, 86, 86);
+    margin: 0;
+    font-size: 1.2em;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* Адаптивность */
+@media (max-width: 992px) {
+    .auth-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .login-info {
+        order: -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .auth-container {
+        padding: 15px;
+    }
+    
+    .auth-header {
+        padding: 25px 20px;
+    }
+    
+    .auth-body {
+        padding: 25px 20px;
+    }
+    
+    .auth-header h1 {
+        font-size: 1.6em;
+    }
+    
+    .form-options {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-container {
+        padding: 10px;
+    }
+    
+    .auth-header {
+        padding: 20px 15px;
+    }
+    
+    .auth-body {
+        padding: 20px 15px;
+    }
+    
+    .form-control {
+        padding: 10px 12px;
+    }
+    
+    .benefit-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+}
+
+/* Улучшения для полей формы */
+.form-group input[type="password"] {
+    letter-spacing: 2px;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="password"]:focus {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}

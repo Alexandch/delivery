@@ -1,0 +1,2259 @@
+{% extends "delivery_app/base.html" %}
+{% load static %}
+
+{% block title %}
+Главная - Доставка продуктов
+{% endblock %}
+
+{% block content %}
+<div class="preloader" id="preloader">
+    <div class="preloader-container">
+        <div class="basket-preloader">
+            <div class="basket-body"></div>
+            <div class="basket-handle"></div>
+            <div class="wheel wheel-left">
+                <div class="wheel-progress"></div>
+                <div class="wheel-hub"></div>
+            </div>
+            <div class="wheel wheel-right">
+                <div class="wheel-progress"></div>
+                <div class="wheel-hub"></div>
+            </div>
+            <div class="progress-bars">
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 70%"></div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 40%"></div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 85%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="preloader-text">Загружаем свежие продукты...</div>
+    </div>
+</div>
+
+<!-- Анимационная сцена -->
+<div class="animation-scene" id="animationScene">
+    <div class="sky"></div>
+    <div class="clouds">
+        <div class="cloud cloud-1"></div>
+        <div class="cloud cloud-2"></div>
+    </div>
+    <div class="products-animation">
+        <div class="product-item product-1">🥑</div>
+        <div class="product-item product-2">🍎</div>
+        <div class="product-item product-3">🥖</div>
+        <div class="product-item product-4">🥛</div>
+        <div class="product-item product-5">🍓</div>
+    </div>
+    <div class="basket-center" id="basketCenter">
+        <div class="basket-body-anim"></div>
+        <div class="basket-handle-anim"></div>
+        <div class="wheel-anim wheel-left-anim"></div>
+        <div class="wheel-anim wheel-right-anim"></div>
+    </div>
+    <div class="main-cloud" id="mainCloud">
+    </div>
+    <div class="ground">
+        <div class="lawn"></div>
+        <div class="house">
+            <div class="house-body"></div>
+            <div class="house-roof"></div>
+            <div class="house-door"></div>
+            <div class="house-window"></div>
+        </div>
+    </div>
+</div>
+
+<div class="main-content" id="mainContent" style="display: none;">
+
+<section class="hero-section">
+    <div class="hero-content">
+        <div class="hero-text">
+            <h1>Добро пожаловать в службу доставки продуктов!</h1>
+            <p>Свежие продукты прямо к вашей двери. Быстро, удобно, надежно.</p>
+            <div class="hero-actions">
+                <a href="{% url 'delivery_app:product_list' %}" class="btn btn-primary">Заказать сейчас</a>
+                <a href="{% url 'delivery_app:about' %}" class="btn btn-secondary">О нас</a>
+            </div>
+        </div>
+        <div class="hero-image">
+            <img src="{% static 'delivery_app/images/hero-delivery.svg' %}" alt="Доставка продуктов">
+        </div>
+    </div>
+</section>
+
+<!-- Слайдер с настройками -->
+<section class="slider-section">
+    <div class="container">
+        <div class="slider-header">
+            <h2>Наши акции и предложения</h2>
+            <div class="slider-controls-panel">
+                <div class="control-group">
+                    <label for="slider-delay">Интервал (сек):</label>
+                    <input type="number" id="slider-delay" min="2" max="30" value="5">
+                </div>
+                <div class="control-group">
+                    <label><input type="checkbox" id="slider-loop" checked> Зациклить</label>
+                    <label><input type="checkbox" id="slider-auto" checked> Авто</label>
+                    <label><input type="checkbox" id="slider-hover" checked> Пауза при наведении</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="slider-container" id="main-slider">
+            <!-- Слайды будут созданы через JavaScript -->
+        </div>
+    </div>
+</section>
+
+<!-- Популярные товары -->
+<section class="featured-products">
+    <div class="container">
+        <div class="section-header">
+            <h2>Популярные товары</h2>
+            <p>Самые востребованные продукты этой недели</p>
+        </div>
+
+        <div class="products-grid">
+            {% for product in products %}
+            <div class="product-card">
+                <div class="product-image">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                    <img src="{% static 'delivery_app/images/product-placeholder.jpg' %}" alt="{{ product.name }}">
+                    {% endif %}
+                    <div class="product-overlay">
+                        <button class="quick-view" data-product-id="{{ product.id }}">Быстрый просмотр</button>
+                    </div>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-title">{{ product.name }}</h3>
+                    <p class="product-description">{{ product.description|truncatewords:15 }}</p>
+                    <div class="product-meta">
+                        <span class="product-price">{{ product.price }} BYN</span>
+                        <span class="product-unit">/ {{ product.get_unit_of_measurement_display }}</span>
+                    </div>
+                    <div class="product-actions">
+                        <a href="{% url 'delivery_app:product_detail' product.id %}"
+                            class="btn btn-outline">Подробнее</a>
+                        <button class="btn btn-primary add-to-cart" data-product-id="{{ product.id }}">В
+                            корзину</button>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="no-products">
+                <img src="{% static 'delivery_app/images/empty-products.svg' %}" alt="Нет товаров">
+                <h3>Товаров пока нет</h3>
+                <p>Скоро мы добавим новые продукты в наш каталог</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="section-footer">
+            <a href="{% url 'delivery_app:product_list' %}" class="btn btn-large">Смотреть все товары</a>
+        </div>
+    </div>
+</section>
+
+<!-- Последняя новость -->
+<section class="latest-news">
+    <div class="container">
+        <div class="section-header">
+            <h2>Последние новости</h2>
+            <a href="{% url 'delivery_app:news' %}" class="view-all">Все новости</a>
+        </div>
+
+        {% if latest_article %}
+        <article class="news-card">
+            <div class="news-image">
+                {% if latest_article.image %}
+                <img src="{{ latest_article.image.url }}" alt="{{ latest_article.title }}">
+                {% else %}
+                <img src="{% static 'delivery_app/images/news-placeholder.jpg' %}" alt="{{ latest_article.title }}">
+                {% endif %}
+            </div>
+            <div class="news-content">
+                <div class="news-meta">
+                    <span class="news-date">{{ latest_article.published_date|date:"d.m.Y" }}</span>
+                    <span class="news-category">Новости</span>
+                </div>
+                <h3 class="news-title">{{ latest_article.title }}</h3>
+                <p class="news-excerpt">{{ latest_article.summary }}</p>
+                <a href="{% url 'delivery_app:news_detail' latest_article.pk %}" class="btn btn-outline">Читать
+                    далее</a>
+            </div>
+        </article>
+        {% else %}
+        <article class="news-card">
+            <div class="news-image">
+                <img src="{% static 'delivery_app/images/image.about.jpg' %}" alt="Запуск службы доставки">
+            </div>
+            <div class="news-content">
+                <div class="news-meta">
+                    <span class="news-date">15.05.2023</span>
+                    <span class="news-category">Новости</span>
+                </div>
+                <h3 class="news-title">Запуск новой службы доставки</h3>
+                <p class="news-excerpt">Мы рады сообщить о запуске нашей новой службы доставки в пределах города.
+                    Теперь мы доставляем ещё быстрее!</p>
+                <a href="#" class="btn btn-outline">Читать далее</a>
+            </div>
+        </article>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Партнеры -->
+<section class="partners-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Наши партнёры</h2>
+            <p>Мы сотрудничаем с лучшими производителями и поставщиками</p>
+        </div>
+
+        <div class="partners-grid">
+            {% for partner in partners %}
+            <div class="partner-card">
+                <a href="{{ partner.website }}" target="_blank" rel="noopener noreferrer">
+                    {% if partner.logo %}
+                    <img src="{{ partner.logo.url }}" alt="{{ partner.name }}" class="partner-logo">
+                    {% else %}
+                    <div class="partner-name">{{ partner.name }}</div>
+                    {% endif %}
+                </a>
+                {% if partner.description %}
+                <p class="partner-description">{{ partner.description }}</p>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div class="no-partners">
+                <img src="{% static 'delivery_app/images/empty-partners.svg' %}" alt="Нет партнеров">
+                <h3>Информация о партнерах скоро появится</h3>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Информационные виджеты -->
+<section class="info-widgets">
+    <div class="container">
+        <div class="widgets-grid">
+            <!-- Погода -->
+            <div class="info-card">
+                <div class="card-header">
+                    <h3>Погода в {{ weather_data.city }}</h3>
+                    <span class="weather-icon">🌤️</span>
+                </div>
+                <div class="card-content">
+                    {% if weather_data.temperature != 'N/A' and weather_data.description != 'N/A' %}
+                    <div class="weather-temp">{{ weather_data.temperature }}°C</div>
+                    <div class="weather-desc">{{ weather_data.description }}</div>
+                    {% else %}
+                    <div class="weather-error">Не удалось получить данные о погоде</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Курсы валют -->
+            <div class="info-card">
+                <div class="card-header">
+                    <h3>Курсы валют</h3>
+                    <span class="currency-icon">💱</span>
+                </div>
+                <div class="card-content">
+                    {% if exchange_data.usd != 'N/A' and exchange_data.eur != 'N/A' %}
+                    <div class="currency-row">
+                        <span>USD:</span>
+                        <span>{{ exchange_data.usd|default:'N/A' }}</span>
+                    </div>
+                    <div class="currency-row">
+                        <span>EUR:</span>
+                        <span>{{ exchange_data.eur|default:'N/A' }}</span>
+                    </div>
+                    {% else %}
+                    <div class="currency-error">Не удалось получить данные о курсах</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Календарь -->
+            <div class="info-card">
+                <div class="card-header">
+                    <h3>Календарь</h3>
+                    <span class="calendar-icon">📅</span>
+                </div>
+                <div class="card-content">
+                    <div class="calendar-header">
+                        {{ current_date|date:"F Y" }}
+                    </div>
+                    <table class="calendar-table">
+                        <thead>
+                            <tr>
+                                <th>Пн</th>
+                                <th>Вт</th>
+                                <th>Ср</th>
+                                <th>Чт</th>
+                                <th>Пт</th>
+                                <th>Сб</th>
+                                <th>Вс</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for week in calendar %}
+                            <tr>
+                                {% for day in week %}
+                                <td{% if day == 0 %} class="empty" {% endif %}>
+                                    {{ day|default:"" }}
+                                    </td>
+                                    {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Преимущества -->
+<section class="benefits-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Почему выбирают нас?</h2>
+        </div>
+
+        <div class="benefits-grid">
+            <div class="benefit-item">
+                <div class="benefit-icon">🚚</div>
+                <h3>Быстрая доставка</h3>
+                <p>Доставляем заказы в течение 2-х часов по городу</p>
+            </div>
+
+            <div class="benefit-item">
+                <div class="benefit-icon">🌿</div>
+                <h3>Свежие продукты</h3>
+                <p>Только качественные и свежие продукты от проверенных поставщиков</p>
+            </div>
+
+            <div class="benefit-item">
+                <div class="benefit-icon">💰</div>
+                <h3>Доступные цены</h3>
+                <p>Конкурентные цены и регулярные акции для наших клиентов</p>
+            </div>
+
+            <div class="benefit-item">
+                <div class="benefit-icon">📱</div>
+                <h3>Удобный заказ</h3>
+                <p>Заказывайте через сайт или мобильное приложение в любое время</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+</div>
+
+<style>
+    /* Стили для прелоадера */
+    .preloader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #87CEEB, #98FB98);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .preloader-container {
+        text-align: center;
+    }
+
+    .basket-preloader {
+        position: relative;
+        width: 120px;
+        height: 100px;
+        margin: 0 auto 20px;
+    }
+
+    .basket-body {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        width: 80px;
+        height: 50px;
+        background: #8B4513;
+        border-radius: 5px 5px 0 0;
+    }
+
+    .basket-handle {
+        position: absolute;
+        top: 10px;
+        left: 30px;
+        width: 60px;
+        height: 20px;
+        border: 8px solid #8B4513;
+        border-bottom: none;
+        border-radius: 30px 30px 0 0;
+    }
+
+    .wheel {
+        position: absolute;
+        bottom: 0;
+        width: 25px;
+        height: 25px;
+        background: #333;
+        border-radius: 50%;
+        border: 3px solid #666;
+    }
+
+    .wheel-left {
+        left: 15px;
+    }
+
+    .wheel-right {
+        right: 15px;
+    }
+
+    .wheel-progress {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: conic-gradient(#4CAF50 0% 70%, #e0e0e0 70% 100%);
+        animation: wheel-spin 2s linear infinite;
+    }
+
+    .wheel-hub {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 8px;
+        height: 8px;
+        background: #fff;
+        border-radius: 50%;
+        z-index: 2;
+    }
+
+    .progress-bars {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        width: 100%;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #e0e0e0;
+        border-radius: 4px;
+        margin-bottom: 5px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4CAF50, #8BC34A);
+        border-radius: 4px;
+        animation: progress-pulse 2s ease-in-out infinite;
+    }
+
+    .preloader-text {
+        color: #2c5aa0;
+        font-size: 1.2em;
+        font-weight: bold;
+        animation: text-pulse 1.5s ease-in-out infinite;
+    }
+
+    /* Анимационная сцена */
+    .animation-scene {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(180deg, #87CEEB 0%, #98FB98 100%);
+        z-index: 9998;
+        display: none;
+        overflow: hidden;
+    }
+
+    .sky {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 70%;
+        background: linear-gradient(180deg, #87CEEB 0%, #B0E2FF 100%);
+    }
+
+    /* Фоновые облака */
+    .clouds {
+        position: absolute;
+        top: 20%;
+        width: 100%;
+        height: 100px;
+    }
+
+    .cloud {
+        position: absolute;
+        background: white;
+        border-radius: 50px;
+        animation: cloud-drift 25s linear infinite;
+    }
+
+    .cloud-1 {
+        width: 120px;
+        height: 60px;
+        top: 0;
+        left: -120px;
+        animation-delay: 0s;
+    }
+
+    .cloud-2 {
+        width: 80px;
+        height: 40px;
+        top: 40px;
+        left: -80px;
+        animation-delay: 8s;
+    }
+
+    .cloud:before, .cloud:after {
+        content: '';
+        position: absolute;
+        background: white;
+        border-radius: 50%;
+    }
+
+    .cloud:before {
+        width: 40px;
+        height: 40px;
+        top: -20px;
+        left: 20px;
+    }
+
+    .cloud:after {
+        width: 30px;
+        height: 30px;
+        top: -15px;
+        right: 20px;
+    }
+
+    /* Корзина в центре */
+    .basket-center {
+        position: absolute;
+        top: 40%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 80px;
+        height: 60px;
+        z-index: 10;
+    }
+
+    /* Основное облако */
+    .main-cloud {
+        position: absolute;
+        bottom: -100px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 180px;
+        height: 80px;
+        background: white;
+        border-radius: 50px;
+        z-index: 9;
+        animation: cloud-approach 3s ease-in-out forwards;
+        animation-delay: 7s;
+    }
+
+    .main-cloud:before, .main-cloud:after {
+        content: '';
+        position: absolute;
+        background: white;
+        border-radius: 50%;
+    }
+
+    .main-cloud:before {
+        width: 60px;
+        height: 60px;
+        top: -30px;
+        left: 30px;
+    }
+
+    .main-cloud:after {
+        width: 50px;
+        height: 50px;
+        top: -25px;
+        right: 30px;
+    }
+
+    /* Корзина на облаке */
+    .basket-on-cloud {
+        position: absolute;
+        top: 40%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 80px;
+        height: 60px;
+    }
+
+    /* Общие стили для корзины */
+    .basket-body-anim {
+        position: absolute;
+        bottom: 0;
+        left: 10px;
+        width: 60px;
+        height: 40px;
+        background: #8B4513;
+        border-radius: 5px 5px 0 0;
+    }
+
+    .basket-handle-anim {
+        position: absolute;
+        top: -5px;
+        left: 15px;
+        width: 50px;
+        height: 15px;
+        border: 6px solid #8B4513;
+        border-bottom: none;
+        border-radius: 25px 25px 0 0;
+    }
+
+    .wheel-anim {
+        position: absolute;
+        bottom: -8px;
+        width: 16px;
+        height: 16px;
+        background: #333;
+        border-radius: 50%;
+        border: 2px solid #666;
+    }
+
+    .wheel-left-anim { left: 5px; }
+    .wheel-right-anim { right: 5px; }
+
+    /* Продукты */
+    .products-animation {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .product-item {
+        position: absolute;
+        font-size: 2em;
+        opacity: 0;
+        z-index: 5;
+        top: -50px;
+        left: 50%;
+        transform: translateX(-50%);
+        animation: product-to-basket 2s ease-in forwards;
+    }
+
+    .product-1 { 
+        animation-delay: 1s; 
+    }
+    .product-2 { 
+        animation-delay: 2s; 
+    }
+    .product-3 { 
+        animation-delay: 3s; 
+    }
+    .product-4 { 
+        animation-delay: 4s; 
+    }
+    .product-5 { 
+        animation-delay: 5s; 
+    }
+
+    /* Земля */
+    .ground {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 30%;
+        background: #7CFC00;
+    }
+
+    .lawn {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(180deg, #7CFC00 0%, #32CD32 100%);
+    }
+
+    .house {
+        position: absolute;
+        bottom: 50px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 100px;
+    }
+
+    .house-body {
+        position: absolute;
+        bottom: 0;
+        width: 100px;
+        height: 80px;
+        background: #FFB6C1;
+        border: 2px solid #FF69B4;
+    }
+
+    .house-roof {
+        position: absolute;
+        top: -20px;
+        left: -10px;
+        width: 120px;
+        height: 40px;
+        background: #8B4513;
+        clip-path: polygon(0% 100%, 50% 0%, 100% 100%);
+    }
+
+    .house-door {
+        position: absolute;
+        bottom: 0;
+        left: 35px;
+        width: 30px;
+        height: 50px;
+        background: #8B4513;
+    }
+
+    .house-window {
+        position: absolute;
+        top: 20px;
+        left: 15px;
+        width: 25px;
+        height: 25px;
+        background: #87CEEB;
+        border: 2px solid #4682B4;
+    }
+
+    /* АНИМАЦИИ */
+    @keyframes wheel-spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    @keyframes progress-pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    @keyframes text-pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    @keyframes cloud-drift {
+        0% { transform: translateX(-100px); }
+        100% { transform: translateX(calc(100vw + 100px)); }
+    }
+
+    /* Подлет облака к корзине */
+    @keyframes cloud-approach {
+        0% {
+            bottom: -100px;
+            opacity: 0;
+        }
+        50% {
+            bottom: 50%;
+            opacity: 1;
+        }
+        100% {
+            bottom: 50%;
+            opacity: 1;
+        }
+    }
+
+    /* Падение продуктов в корзину */
+    @keyframes product-to-basket {
+        0% {
+            transform: translateX(-50%) translateY(0) rotate(0deg) scale(0.5);
+            opacity: 0;
+        }
+        20% {
+            opacity: 1;
+            transform: translateX(-50%) translateY(100px) rotate(90deg) scale(1);
+        }
+        50% {
+            transform: translateX(-50%) translateY(200px) rotate(180deg) scale(1);
+            opacity: 1;
+        }
+        80% {
+            transform: translateX(-50%) translateY(250px) rotate(270deg) scale(0.8);
+            opacity: 0.8;
+        }
+        100% {
+            transform: translateX(-50%) translateY(270px) rotate(360deg) scale(0);
+            opacity: 0;
+        }
+    }
+
+    /* Опускание облака с корзиной на лужайку */
+    @keyframes cloud-landing {
+        0% {
+            bottom: 55%;
+            opacity: 1;
+        }
+        100% {
+            bottom: 30px;
+            opacity: 1;
+        }
+    }
+
+    /* Общие стили */
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .section-header h2 {
+        color: #2c5aa0;
+        margin-bottom: 10px;
+    }
+
+    .section-header p {
+        color: #6c757d;
+        font-size: 1.1em;
+    }
+
+    .view-all {
+        color: #2c5aa0;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    /* Кнопки */
+    .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-primary {
+        background-color: #2c5aa0;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background-color: #1e3d6f;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+
+    .btn-outline {
+        background-color: transparent;
+        color: #2c5aa0;
+        border: 1px solid #2c5aa0;
+    }
+
+    .btn-outline:hover {
+        background-color: #2c5aa0;
+        color: white;
+    }
+
+    .btn-large {
+        padding: 12px 30px;
+        font-size: 1.1em;
+    }
+
+    /* Герой-секция */
+    .hero-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 60px 0;
+    }
+
+    .hero-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        gap: 40px;
+    }
+
+    .hero-text {
+        flex: 1;
+    }
+
+    .hero-text h1 {
+        font-size: 2.5em;
+        color: #2c5aa0;
+        margin-bottom: 20px;
+    }
+
+    .hero-text p {
+        font-size: 1.2em;
+        color: #6c757d;
+        margin-bottom: 30px;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 15px;
+    }
+
+    .hero-image {
+        flex: 1;
+        text-align: center;
+    }
+
+    .hero-image img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* Баннеры */
+    .banner-section {
+        padding: 40px 0;
+    }
+
+    .banner-slider {
+        display: flex;
+        gap: 20px;
+        overflow-x: auto;
+        padding: 10px 0;
+        scrollbar-width: thin;
+    }
+
+    .banner-item {
+        flex: 0 0 auto;
+        width: 550px;
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .banner-img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+    }
+
+    .banner-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+        padding: 15px;
+        color: white;
+    }
+
+    .banner-overlay h3 {
+        color: #88b5f8;
+        margin: 0;
+        font-size: 1.1em;
+    }
+
+    /* Товары */
+    .featured-products {
+        padding: 60px 0;
+        background-color: #f8f9fa;
+    }
+
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+
+    .product-card {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .product-image {
+        position: relative;
+        height: 180px;
+        overflow: hidden;
+    }
+
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .product-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .product-card:hover .product-overlay {
+        opacity: 1;
+    }
+
+    .quick-view {
+        background: white;
+        color: #2c5aa0;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .product-info {
+        padding: 15px;
+    }
+
+    .product-title {
+        font-size: 1.1em;
+        margin-bottom: 8px;
+        color: #2c5aa0;
+    }
+
+    .product-description {
+        color: #6c757d;
+        font-size: 0.9em;
+        margin-bottom: 15px;
+    }
+
+    .product-meta {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .product-price {
+        font-weight: bold;
+        font-size: 1.2em;
+        color: #2c5aa0;
+    }
+
+    .product-unit {
+        color: #6c757d;
+        font-size: 0.9em;
+        margin-left: 5px;
+    }
+
+    .product-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .add-to-cart {
+        flex: 1;
+    }
+
+    .no-products {
+        text-align: center;
+        grid-column: 1 / -1;
+        padding: 40px 0;
+    }
+
+    .no-products img {
+        max-width: 200px;
+        margin-bottom: 20px;
+    }
+
+    .section-footer {
+        text-align: center;
+    }
+
+    /* Новости */
+    .latest-news {
+        padding: 60px 0;
+        position: relative;
+    }
+
+    .news-card {
+        display: flex;
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        margin: 0 auto;
+        max-width: 1500px;
+        position: relative;
+    }
+
+    .news-image {
+        flex: 0 0 40%;
+        position: relative;
+    }
+
+    .news-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .news-content {
+        flex: 1;
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .news-meta {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .news-date,
+    .news-category {
+        font-size: 0.9em;
+        color: #6c757d;
+    }
+
+    .news-title {
+        font-size: 1.5em;
+        color: #2c5aa0;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+    }
+
+    .news-excerpt {
+        color: #6c757d;
+        margin-bottom: 20px;
+        line-height: 1.6;
+        text-indent: 1.5em;
+    }
+
+    /* Псевдоэлемент для первой буквы */
+    .news-excerpt::first-letter {
+        font-size: 2em;
+        font-weight: bold;
+        color: #2c5aa0;
+        line-height: 1;
+        margin-right: 1px;
+        font-family: 'Georgia', serif;
+    }
+
+    /* Партнеры */
+    .partners-section {
+        padding: 60px 0;
+        background-color: #f8f9fa;
+    }
+
+    .partners-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 30px;
+        margin: 2rem 0;
+    }
+
+    .partner-card {
+        background: white;
+        border-radius: 20px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+    }
+
+    /* Круг для логотипа/названия */
+    .partner-card a {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        color: inherit;
+        width: 100%;
+    }
+
+    .partner-logo {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: contain;
+        background: linear-gradient(135deg, #b0bdf9 0%, #d6aeff 100%);
+        padding: 15px;
+        border: 4px solid white;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .partner-name {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        text-align: center;
+        padding: 15px;
+        border: 4px solid white;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+        font-size: 0.9em;
+        line-height: 1.2;
+    }
+
+    .partner-card:hover .partner-logo,
+    .partner-card:hover .partner-name {
+        transform: scale(1.1);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+        cursor: pointer;
+    }
+
+    .partner-description {
+        font-size: 0.9em;
+        color: #6c757d;
+        margin-top: 10px;
+        line-height: 1.4;
+        max-height: 60px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;/*ограничение 3 строки*/
+        -webkit-box-orient: vertical;
+    }
+
+    .partner-card a::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1;
+    }
+
+    .partner-description {
+        position: relative;
+        z-index: 2;
+    }
+
+    .no-partners {
+        text-align: center;
+        grid-column: 1 / -1;
+        padding: 40px 0;
+    }
+
+    .no-partners img {
+        max-width: 200px;
+        margin-bottom: 20px;
+    }
+
+    /* Информационные виджеты */
+    .info-widgets {
+        padding: 60px 0;
+    }
+
+    .widgets-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .card-header h3 {
+        margin: 0;
+        color: #a6c8fc;
+    }
+
+    .weather-icon,
+    .currency-icon,
+    .calendar-icon {
+        font-size: 1.5em;
+    }
+
+    .weather-temp {
+        font-size: 1.8em;
+        font-weight: bold;
+        color: #2c5aa0;
+        margin-bottom: 5px;
+    }
+
+    .weather-desc {
+        color: #6c757d;
+    }
+
+    .weather-error,
+    .currency-error {
+        color: #dc3545;
+    }
+
+    .currency-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        padding: 5px 0;
+    }
+
+    .currency-row:not(:last-child) {
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .calendar-header {
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #2c5aa0;
+    }
+
+    .calendar-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .calendar-table th {
+        padding: 5px;
+        text-align: center;
+        font-weight: normal;
+        color: #6c757d;
+        font-size: 0.9em;
+    }
+
+    .calendar-table td {
+        padding: 5px;
+        text-align: center;
+        border: 1px solid #e9ecef;
+    }
+
+    .calendar-table td.empty {
+        background-color: #f8f9fa;
+    }
+
+    /* Преимущества */
+    .benefits-section {
+        padding: 60px 0;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+
+    .benefits-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 30px;
+    }
+
+    .benefit-item {
+        text-align: center;
+        padding: 30px 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .benefit-icon {
+        font-size: 3em;
+        margin-bottom: 15px;
+    }
+
+    .benefit-item h3 {
+        color: #2c5aa0;
+        margin-bottom: 15px;
+    }
+
+    .benefit-item p {
+        color: #6c757d;
+        line-height: 1.5;
+    }
+
+    .welcome-section {
+        padding: 80px 20px;
+        text-align: center;
+        background: white;
+    }
+
+    .welcome-section h2 {
+        color: #2c5aa0;
+        margin-bottom: 20px;
+        font-size: 2.5em;
+    }
+
+    .welcome-section p {
+        font-size: 1.2em;
+        color: #666;
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 1200px) {
+        .partners-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .partners-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .partner-card {
+            width: 120px;
+            height: 120px;
+        }
+
+        .news-card {
+            position: relative;
+            top: auto;
+            left: auto;
+            transform: none;
+            width: 100%;
+            margin: 1rem 0;
+            flex-direction: column;
+        }
+
+        .latest-news {
+            min-height: auto;
+            position: relative;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .partners-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .partner-card {
+            width: 100px;
+            height: 100px;
+        }
+
+        .partner-name {
+            font-size: 0.8em;
+        }
+
+        .news-excerpt::first-letter {
+            font-size: 2em;
+        }
+    }
+
+    @media (max-height: 600px) and (orientation: landscape) {
+        .latest-news {
+            min-height: 300px;
+        }
+
+        .news-card {
+            padding: 1rem;
+        }
+    }
+
+    .hero-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 4rem 0;
+    }
+
+    .section-header {
+        margin-bottom: 3rem;
+        text-align: center;
+    }
+
+    /* Кавычки в зависимости от языка */
+    [lang="ru"] q {
+        quotes: "«" "»" "„" "“";
+    }
+
+    [lang="en"] q {
+        quotes: "“" "”" "‘" "’";
+    }
+
+    /* Стили для заблокированных элементов */
+    .btn:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    /* Стили для обязательных полей */
+    .subscribe-form input:required {
+        background-image: linear-gradient(45deg, transparent 90%, #ff9800 90%);
+        background-size: 10px 10px;
+        background-repeat: no-repeat;
+        background-position: right top;
+    }
+
+    /* Стили для слайдера */
+.slider-section {
+    padding: 40px 0;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.slider-header h2 {
+    color: #2c5aa0;
+    margin: 0;
+}
+
+.slider-controls-panel {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.control-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.control-group label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin: 0;
+}
+
+#slider-delay {
+    width: 60px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.control-group input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+/* Контейнер слайдера */
+.slider-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.slider-track {
+    display: flex;
+    height: 100%;
+    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.slide {
+    min-width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.slide-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    color: white;
+    padding: 25px;
+    text-align: center;
+}
+
+.slide-title {
+    font-size: 1.8em;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.slide-description {
+    font-size: 1.1em;
+    opacity: 0.9;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.slide-link {
+    display: block;
+    height: 100%;
+    width: 100%;
+    position: relative;
+    text-decoration: none;
+}
+
+/* Элементы управления слайдером */
+.slider-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #2c5aa0;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    z-index: 10;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.slider-nav:hover {
+    background-color: white;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.prev {
+    left: 20px;
+}
+
+.next {
+    right: 20px;
+}
+
+.slider-pagination {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    z-index: 10;
+}
+
+.pagination-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.pagination-dot:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+    transform: scale(1.2);
+}
+
+.pagination-dot.active {
+    background-color: white;
+    transform: scale(1.3);
+    border-color: #2c5aa0;
+}
+
+.slider-counter {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    z-index: 10;
+    backdrop-filter: blur(10px);
+}
+
+/* Адаптивность слайдера */
+@media (max-width: 768px) {
+    .slider-container {
+        height: 300px;
+    }
+    
+    .slider-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .slider-controls-panel {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .slide-title {
+        font-size: 1.4em;
+    }
+    
+    .slide-description {
+        font-size: 1em;
+    }
+    
+    .slider-nav {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+    
+    .prev {
+        left: 10px;
+    }
+    
+    .next {
+        right: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .slider-container {
+        height: 250px;
+    }
+    
+    .slider-controls-panel {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .slide-caption {
+        padding: 15px;
+    }
+    
+    .slide-title {
+        font-size: 1.2em;
+    }
+    
+    .slide-description {
+        font-size: 0.9em;
+    }
+}
+</style>
+
+<script>
+    // Базовый скрипт для демонстрации работы прелоадера и анимации
+    // В реальном проекте здесь будет логика загрузки ресурсов
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Симуляция загрузки страницы
+        setTimeout(function() {
+            // Скрыть прелоадер
+            document.getElementById('preloader').style.display = 'none';
+            
+            // Показать анимационную сцену
+            const animationScene = document.getElementById('animationScene');
+            animationScene.style.display = 'block';
+            
+            // Последовательность анимаций
+            setTimeout(function() {
+                // После того как облако подлетело к корзине, добавляется корзина на облако
+                const mainCloud = document.getElementById('mainCloud');
+                
+                // Создание корзины на облаке
+                const basketOnCloud = document.createElement('div');
+                basketOnCloud.className = 'basket-on-cloud';
+                basketOnCloud.innerHTML = `
+                    <div class="basket-body-anim"></div>
+                    <div class="basket-handle-anim"></div>
+                    <div class="wheel-anim wheel-left-anim"></div>
+                    <div class="wheel-anim wheel-right-anim"></div>
+                `;
+                
+                // Добавление корзины на облако
+                mainCloud.appendChild(basketOnCloud);
+                
+                // Скрыть корзину в центре
+                document.getElementById('basketCenter').style.display = 'none';
+                
+                // Запуск анимации опускания облака с корзиной на лужайку
+                mainCloud.style.animation = 'cloud-landing 4s ease-in-out forwards';
+                
+                // После завершения анимации отображение контента
+                setTimeout(function() {
+                    animationScene.style.opacity = '0';
+                    setTimeout(function() {
+                        animationScene.style.display = 'none';
+                        document.getElementById('mainContent').style.display = 'block';
+                        
+                        // Плавное появление основного контента
+                        document.getElementById('mainContent').style.opacity = '0';
+                        document.getElementById('mainContent').style.transition = 'opacity 1s ease-in';
+                        setTimeout(function() {
+                            document.getElementById('mainContent').style.opacity = '1';
+                        }, 100);
+                    }, 1000);
+                }, 4000); // Время анимации опускания облака
+            }, 10000); // Общее время до начала опускания (прелоадер + продукты + подлет облака)
+        }, 3000); // Время показа прелоадера
+    });
+
+    // Функция для добавления товара в корзину
+    document.querySelectorAll('.add-to-cart').forEach(button => {
+        button.addEventListener('click', function () {
+            const productId = this.dataset.productId;
+            // Здесь будет код для добавления товара в корзину
+            alert('Товар добавлен в корзину!');
+        });
+    });
+
+    // Функция для быстрого просмотра товара
+    document.querySelectorAll('.quick-view').forEach(button => {
+        button.addEventListener('click', function () {
+            const productId = this.dataset.productId;
+            // Здесь будет код для быстрого просмотра товара
+            alert('Быстрый просмотр товара #' + productId);
+        });
+    });
+
+    // Изменение курсора при наведении
+    document.querySelectorAll('.btn').forEach(button => {
+        button.addEventListener('mouseenter', function () {
+            this.style.cursor = 'grab';
+        });
+
+        button.addEventListener('mouseleave', function () {
+            this.style.cursor = 'pointer';
+        });
+
+        button.addEventListener('mousedown', function () {
+            this.style.cursor = 'grabbing';
+        });
+
+        button.addEventListener('mouseup', function () {
+            this.style.cursor = 'grab';
+        });
+    });
+
+    // Класс для слайдера с полным функционалом
+class ImageSlider {
+    constructor(container, options = {}) {
+        this.container = container;
+        this.slides = options.slides || [];
+        this.currentIndex = 0;
+        this.autoPlay = options.autoPlay || false;
+        this.delay = options.delay || 5000;
+        this.loop = options.loop !== false;
+        this.showNavs = options.showNavs !== false;
+        this.showPags = options.showPags !== false;
+        this.stopOnHover = options.stopOnHover !== false;
+        
+        this.autoPlayInterval = null;
+        this.isPaused = false;
+        this.isAnimating = false;
+        
+        this.init();
+    }
+    
+    init() {
+        // Создаем структуру слайдера
+        this.container.innerHTML = '';
+        
+        // Трек слайдов
+        this.track = document.createElement('div');
+        this.track.className = 'slider-track';
+        this.container.appendChild(this.track);
+        
+        // слайды
+        this.slides.forEach((slide, index) => {
+            const slideElement = document.createElement('div');
+            slideElement.className = 'slide';
+            
+            const link = document.createElement('a');
+            link.href = slide.url || '#';
+            link.className = 'slide-link';
+            
+            const img = document.createElement('img');
+            img.src = slide.image;
+            img.alt = slide.caption || `Slide ${index + 1}`;
+            img.loading = 'lazy';
+            
+            link.appendChild(img);
+            
+            if (slide.title || slide.description) {
+                const caption = document.createElement('div');
+                caption.className = 'slide-caption';
+                
+                if (slide.title) {
+                    const title = document.createElement('div');
+                    title.className = 'slide-title';
+                    title.textContent = slide.title;
+                    caption.appendChild(title);
+                }
+                
+                if (slide.description) {
+                    const description = document.createElement('div');
+                    description.className = 'slide-description';
+                    description.textContent = slide.description;
+                    caption.appendChild(description);
+                }
+                
+                link.appendChild(caption);
+            }
+            
+            slideElement.appendChild(link);
+            this.track.appendChild(slideElement);
+        });
+        
+        // Создание навигационных кнопки
+        if (this.showNavs) {
+            this.prevButton = document.createElement('button');
+            this.prevButton.className = 'slider-nav prev';
+            this.prevButton.innerHTML = '‹';
+            this.prevButton.setAttribute('aria-label', 'Предыдущий слайд');
+            this.prevButton.addEventListener('click', () => this.prev());
+            this.container.appendChild(this.prevButton);
+            
+            this.nextButton = document.createElement('button');
+            this.nextButton.className = 'slider-nav next';
+            this.nextButton.innerHTML = '›';
+            this.nextButton.setAttribute('aria-label', 'Следующий слайд');
+            this.nextButton.addEventListener('click', () => this.next());
+            this.container.appendChild(this.nextButton);
+        }
+        
+        // Создание пагинацию
+        if (this.showPags) {
+            this.pagination = document.createElement('div');
+            this.pagination.className = 'slider-pagination';
+            this.container.appendChild(this.pagination);
+            
+            this.slides.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'pagination-dot';
+                dot.setAttribute('aria-label', `Перейти к слайду ${index + 1}`);
+                if (index === 0) dot.classList.add('active');
+                dot.addEventListener('click', () => this.goToSlide(index));
+                this.pagination.appendChild(dot);
+            });
+        }
+        
+        // Создаем счетчик слайдов
+        this.counter = document.createElement('div');
+        this.counter.className = 'slider-counter';
+        this.updateCounter();
+        this.container.appendChild(this.counter);
+        
+        // Обработчики для паузы при наведении
+        if (this.stopOnHover) {
+            this.container.addEventListener('mouseenter', () => {
+                this.isPaused = true;
+                this.clearAutoPlay();
+            });
+            
+            this.container.addEventListener('mouseleave', () => {
+                this.isPaused = false;
+                if (this.autoPlay) {
+                    this.startAutoPlay();
+                }
+            });
+        }
+        
+        // Обработчики для касаний (мобильные устройства)
+        this.setupTouchEvents();
+        
+        // Запускаем автоплеер если нужно
+        if (this.autoPlay) {
+            this.startAutoPlay();
+        }
+        
+        this.updateSlider();
+    }
+    
+    setupTouchEvents() {
+        let startX = 0;
+        let endX = 0;
+        const minSwipeDistance = 50;
+        
+        this.container.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+        }, { passive: true });
+        
+        this.container.addEventListener('touchend', (e) => {
+            endX = e.changedTouches[0].clientX;
+            const diff = startX - endX;
+            
+            if (Math.abs(diff) > minSwipeDistance) {
+                if (diff > 0) {
+                    this.next();
+                } else {
+                    this.prev();
+                }
+            }
+        }, { passive: true });
+    }
+    
+    updateSlider() {
+        if (this.isAnimating) return;
+        
+        this.isAnimating = true;
+        this.track.style.transform = `translateX(-${this.currentIndex * 100}%)`;
+        
+        // Обновляем активную точку пагинации
+        if (this.showPags) {
+            const dots = this.pagination.querySelectorAll('.pagination-dot');
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === this.currentIndex);
+            });
+        }
+        
+        // Обновляем счетчик
+        this.updateCounter();
+        
+        // Сбрасываем флаг анимации после завершения перехода
+        setTimeout(() => {
+            this.isAnimating = false;
+        }, 600);
+    }
+    
+    updateCounter() {
+        this.counter.textContent = `${this.currentIndex + 1} / ${this.slides.length}`;
+    }
+    
+    next() {
+        if (this.isAnimating) return;
+        
+        if (this.currentIndex < this.slides.length - 1) {
+            this.currentIndex++;
+        } else if (this.loop) {
+            this.currentIndex = 0;
+        } else {
+            return; // Не делаем ничего если loop отключен и это последний слайд
+        }
+        
+        this.updateSlider();
+    }
+    
+    prev() {
+        if (this.isAnimating) return;
+        
+        if (this.currentIndex > 0) {
+            this.currentIndex--;
+        } else if (this.loop) {
+            this.currentIndex = this.slides.length - 1;
+        } else {
+            return; // Не делаем ничего если loop отключен и это первый слайд
+        }
+        
+        this.updateSlider();
+    }
+    
+    goToSlide(index) {
+        if (this.isAnimating || index === this.currentIndex) return;
+        
+        if (index >= 0 && index < this.slides.length) {
+            this.currentIndex = index;
+            this.updateSlider();
+        }
+    }
+    
+    startAutoPlay() {
+        this.clearAutoPlay();
+        this.autoPlayInterval = setInterval(() => {
+            if (!this.isPaused && !this.isAnimating) {
+                this.next();
+            }
+        }, this.delay);
+    }
+    
+    clearAutoPlay() {
+        if (this.autoPlayInterval) {
+            clearInterval(this.autoPlayInterval);
+            this.autoPlayInterval = null;
+        }
+    }
+    
+    updateDelay(newDelay) {
+        this.delay = newDelay * 1000;
+        if (this.autoPlay) {
+            this.startAutoPlay();
+        }
+    }
+    
+    updateOptions(options) {
+        if (options.autoPlay !== undefined) {
+            this.autoPlay = options.autoPlay;
+            if (this.autoPlay) {
+                this.startAutoPlay();
+            } else {
+                this.clearAutoPlay();
+            }
+        }
+        
+        if (options.loop !== undefined) {
+            this.loop = options.loop;
+        }
+        
+        if (options.stopOnHover !== undefined) {
+            this.stopOnHover = options.stopOnHover;
+            // Удаление существующих обработчиков
+            this.container.removeEventListener('mouseenter', this.mouseEnterHandler);
+            this.container.removeEventListener('mouseleave', this.mouseLeaveHandler);
+            
+            if (this.stopOnHover) {
+                // Добав обработчики
+                this.container.addEventListener('mouseenter', () => {
+                    this.isPaused = true;
+                    this.clearAutoPlay();
+                });
+                
+                this.container.addEventListener('mouseleave', () => {
+                    this.isPaused = false;
+                    if (this.autoPlay) {
+                        this.startAutoPlay();
+                    }
+                });
+            }
+        }
+    }
+}
+
+// Данные для слайдов
+const slidesData = [
+    {
+        image: '{% static 'delivery_app/images/banner1.svg' %}',
+        title: 'Быстрая доставка',
+        description: 'Доставляем заказы в течение 2-х часов по городу',
+        url: '{% url 'delivery_app:product_list' %}'
+    },
+    {
+        image: '{% static 'delivery_app/images/banner2.svg' %}',
+        title: 'Свежие продукты',
+        description: 'Только качественные продукты от проверенных поставщиков',
+        url: '{% url 'delivery_app:about' %}'
+    },
+    {
+        image: '{% static 'delivery_app/images/banner3.svg' %}',
+        title: 'Лучшие цены',
+        description: 'Конкурентные цены и регулярные акции для наших клиентов',
+        url: '{% url 'delivery_app:promocodes' %}'
+    },
+    {
+        image: '{% static 'delivery_app/images/banner1.svg' %}',
+        title: 'Акции недели',
+        description: 'Скидки до 30% на популярные товары',
+        url: '{% url 'delivery_app:product_list' %}?sale=true'
+    },
+    {
+        image: '{% static 'delivery_app/images/banner2.svg' %}',
+        title: 'Новые поступления',
+        description: 'Пополнение ассортимента экологичными продуктами',
+        url: '{% url 'delivery_app:product_list' %}?new=true'
+    }
+];
+
+// Инициализация слайдера после загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+    const sliderContainer = document.getElementById('main-slider');
+    const slider = new ImageSlider(sliderContainer, {
+        slides: slidesData,
+        autoPlay: true,
+        delay: 5000,
+        loop: true,
+        showNavs: true,
+        showPags: true,
+        stopOnHover: true
+    });
+    
+    // Элементы управления
+    const delayInput = document.getElementById('slider-delay');
+    const loopToggle = document.getElementById('slider-loop');
+    const autoToggle = document.getElementById('slider-auto');
+    const hoverToggle = document.getElementById('slider-hover');
+    
+    // Обработчики изменений настроек
+    delayInput.addEventListener('change', function() {
+        const delay = parseInt(this.value);
+        if (delay >= 2 && delay <= 30) {
+            slider.updateDelay(delay);
+        } else {
+            this.value = 5;
+            slider.updateDelay(5);
+        }
+    });
+    
+    loopToggle.addEventListener('change', function() {
+        slider.updateOptions({ loop: this.checked });
+    });
+    
+    autoToggle.addEventListener('change', function() {
+        slider.updateOptions({ autoPlay: this.checked });
+    });
+    
+    hoverToggle.addEventListener('change', function() {
+        slider.updateOptions({ stopOnHover: this.checked });
+    });
+    
+    // Добавляем обработчики клавиатуры для доступности
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowLeft') {
+            slider.prev();
+        } else if (e.key === 'ArrowRight') {
+            slider.next();
+        }
+    });
+});
+</script>
+{% endblock %}

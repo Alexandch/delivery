@@ -1,0 +1,1134 @@
+{% extends "delivery_app/base.html" %}
+{% load static %}
+
+{% block title %}
+Вакансии
+{% endblock %}
+
+{% block content %}
+<div class="vacancies-container">
+    <div class="page-header">
+        <h1>Карьерные возможности</h1>
+        <p class="page-subtitle">Присоединяйтесь к нашей команде доставки продуктов</p>
+        <p class="current-date">Дата: {{ current_date }} | Временная зона: {{ timezone }}</p>
+    </div>
+
+    <!-- Блок для демонстрации работы классов -->
+    <div class="demo-section">
+        <h2>Управление вакансиями</h2>
+        
+        <!-- Форма для добавления вакансий -->
+        <div class="form-section">
+            <h3>Добавить новую вакансию</h3>
+            <form id="vacancyForm">
+                <div class="form-group">
+                    <label for="profession">Профессия:</label>
+                    <input type="text" id="profession" name="profession" required 
+                           placeholder="Например: Водитель-курьер">
+                </div>
+                <div class="form-group">
+                    <label for="salary">Зарплата (BYN):</label>
+                    <input type="number" id="salary" name="salary" required 
+                           placeholder="Например: 1500" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="phone">Телефон:</label>
+                    <input type="tel" id="phone" name="phone" required 
+                           placeholder="+375 (XX) XXX-XX-XX" 
+                           pattern="\+375\s?\(?(25|29|33|44)\)?\s?\d{3}-?\d{2}-?\d{2}">
+                    <small class="phone-format">Формат: +375 (XX) XXX-XX-XX</small>
+                </div>
+                <div class="form-group">
+                    <label for="city">Город:</label>
+                    <select id="city" name="city" required>
+                        <option value="">Выберите город</option>
+                        <option value="Минск">Минск</option>
+                        <option value="Гродно">Гродно</option>
+                        <option value="Брест">Брест</option>
+                        <option value="Гомель">Гомель</option>
+                        <option value="Витебск">Витебск</option>
+                        <option value="Могилев">Могилев</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" 
+                           placeholder="hr@company.by">
+                </div>
+                <div class="form-group">
+                    <label for="experience">Требуемый опыт:</label>
+                    <select id="experience" name="experience">
+                        <option value="Без опыта">Без опыта</option>
+                        <option value="1-3 года">1-3 года</option>
+                        <option value="3-5 лет">3-5 лет</option>
+                        <option value="Более 5 лет">Более 5 лет</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-add">Добавить вакансию</button>
+                <button type="button" onclick="clearAllVacancies()" class="btn-clear">Очистить все</button>
+            </form>
+        </div>
+
+        <!-- Блоки для вывода результатов -->
+        <div class="results-section">
+            <div class="results-column">
+                <h3>Все вакансии <span id="vacanciesCount"></span></h3>
+                <div class="filter-section">
+                    <label for="cityFilter">Фильтр по городу:</label>
+                    <select id="cityFilter" onchange="filterByCity()">
+                        <option value="">Все города</option>
+                        <option value="Минск">Минск</option>
+                        <option value="Гродно">Гродно</option>
+                        <option value="Брест">Брест</option>
+                        <option value="Гомель">Гомель</option>
+                        <option value="Витебск">Витебск</option>
+                        <option value="Могилев">Могилев</option>
+                    </select>
+                    <button onclick="sortBySalary()" class="btn-sort">Сортировать по зарплате</button>
+                </div>
+                <div id="allVacancies"></div>
+            </div>
+            <div class="results-column">
+                <h3>Высокооплачиваемые вакансии</h3>
+                <div id="highPaidVacancies"></div>
+            </div>
+        </div>
+
+        <!-- Переключатель между вариантами реализации -->
+        <div class="implementation-switcher">
+            <label>Реализация:</label>
+            <select id="implementationType">
+                <option value="class">Классы (ES6)</option>
+                <option value="prototype">Прототипы</option>
+            </select>
+            <button onclick="switchImplementation()" class="btn-switch">Переключить</button>
+            <button onclick="exportToJSON()" class="btn-export">Экспорт в JSON</button>
+        </div>
+    </div>
+
+    {% if vacancies %}
+    <div class="vacancies-list clearfix">
+        {% for vacancy in vacancies %}
+        <div class="vacancy-card">
+            <div class="vacancy-header clearfix">
+                <h2 class="vacancy-title">{{ vacancy.title }}</h2>
+                <span class="vacancy-date">Добавлено: {{ vacancy.created_date|date:'d.m.Y' }}</span>
+            </div>
+            
+            <div class="vacancy-content">
+                <div class="vacancy-text">
+                    {{ vacancy.description|linebreaks }}
+                </div>
+            </div>
+            
+            <div class="vacancy-actions clearfix">
+                <button class="btn-apply" onclick="showApplicationForm({{ vacancy.id }})">Откликнуться на вакансию</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-vacancies">
+        <div class="empty-state">
+            <img src="{% static 'delivery_app/images/empty-vacancies.svg' %}" alt="Нет вакансий" class="empty-image">
+            <h3>Сейчас нет открытых вакансий</h3>
+            <p>Но вы всегда можете отправить нам своё резюме, и мы свяжемся с вами, когда появится подходящая вакансия.</p>
+            <button class="btn-send-resume">Отправить резюме</button>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="benefits-section clearfix">
+        <h2>Почему стоит работать у нас?</h2>
+        <div class="benefits-container">
+            <div class="benefit-item">
+                <div class="benefit-icon">💼</div>
+                <h3>Стабильность</h3>
+                <p>Официальное трудоустройство и своевременная выплата заработной платы</p>
+            </div>
+            <div class="benefit-item">
+                <div class="benefit-icon">📈</div>
+                <h3>Развитие</h3>
+                <p>Возможности карьерного роста и профессионального обучения</p>
+            </div>
+            <div class="benefit-item">
+                <div class="benefit-icon">🤝</div>
+                <h3>Команда</h3>
+                <p>Дружный коллектив и поддержка опытных коллег</p>
+            </div>
+            <div class="benefit-item">
+                <div class="benefit-icon">🍎</div>
+                <h3>Льготы</h3>
+                <p>Скидки на продукты, бесплатное питание и корпоративные мероприятия</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Clearfix для очистки float */
+.clearfix::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.vacancies-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+}
+
+.page-header h1 {
+    color: #2c5aa0;
+    margin-bottom: 10px;
+    font-size: 2.2em;
+}
+
+.page-subtitle {
+    font-size: 1.2em;
+    color: #6c757d;
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.current-date {
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+/* Стили для списка вакансий с float */
+.vacancies-list {
+    margin-bottom: 50px;
+}
+
+.vacancy-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 25px;
+    margin-bottom: 25px;
+    border-left: 4px solid #2c5aa0;
+    float: left;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.vacancy-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+/* Заголовок вакансии с float */
+.vacancy-header {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.vacancy-title {
+    color: #2c5aa0;
+    margin: 0;
+    float: left;
+    font-size: 1.4em;
+    line-height: 1.3;
+}
+
+.vacancy-date {
+    color: #6c757d;
+    font-size: 0.9em;
+    float: right;
+    background: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+/* Контент вакансии */
+.vacancy-content {
+    line-height: 1.7;
+    margin-bottom: 20px;
+    color: #495057;
+}
+
+.vacancy-text {
+    text-align: justify;
+}
+
+.vacancy-text h3,
+.vacancy-text h4 {
+    color: #2c5aa0;
+    margin: 20px 0 10px 0;
+    font-size: 1.1em;
+}
+
+.vacancy-text ul,
+.vacancy-text ol {
+    margin: 10px 0;
+    padding-left: 25px;
+}
+
+.vacancy-text li {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+
+.vacancy-text p {
+    margin-bottom: 15px;
+    line-height: 1.7;
+}
+
+.vacancy-text strong {
+    color: #2c5aa0;
+    font-weight: 600;
+}
+
+/* Кнопки с float */
+.vacancy-actions {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #e9ecef;
+}
+
+.btn-apply {
+    background-color: #2c5aa0;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    float: right;
+    transition: background-color 0.3s ease;
+    font-size: 0.95em;
+}
+
+.btn-apply:hover {
+    background-color: #1e3d6f;
+    transform: translateY(-1px);
+}
+
+/* Стили для блока benefits с float */
+.benefits-section {
+    background-color: #f8f9fa;
+    padding: 40px;
+    border-radius: 10px;
+    margin-top: 30px;
+}
+
+.benefits-section h2 {
+    text-align: center;
+    color: #2c5aa0;
+    margin-bottom: 30px;
+    font-size: 1.8em;
+}
+
+.benefits-container {
+    margin: 0 -15px;
+}
+
+.benefit-item {
+    float: left;
+    width: 48%;
+    margin: 0 1% 25px 1%;
+    text-align: center;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+    min-height: 200px;
+}
+
+.benefit-icon {
+    font-size: 2.5em;
+    margin-bottom: 15px;
+}
+
+.benefit-item h3 {
+    color: #2c5aa0;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+.benefit-item p {
+    color: #6c757d;
+    line-height: 1.5;
+    font-size: 0.95em;
+}
+
+/* Стили для пустого состояния */
+.no-vacancies {
+    text-align: center;
+    padding: 40px 0;
+}
+
+.empty-state {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.empty-image {
+    max-width: 200px;
+    margin-bottom: 20px;
+}
+
+.btn-send-resume {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 15px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-send-resume:hover {
+    background-color: #218838;
+}
+
+.demo-section {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+    border-left: 4px solid #2c5aa0;
+}
+
+.form-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #2c5aa0;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.phone-format {
+    display: block;
+    color: #6c757d;
+    font-size: 0.8em;
+    margin-top: 4px;
+}
+
+.btn-add, .btn-switch, .btn-clear, .btn-export, .btn-sort {
+    background-color: #2c5aa0;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    font-size: 0.9em;
+}
+
+.btn-clear {
+    background-color: #dc3545;
+}
+
+.btn-export {
+    background-color: #28a745;
+}
+
+.btn-sort {
+    background-color: #6c757d;
+    padding: 6px 12px;
+    font-size: 0.8em;
+}
+
+.btn-add:hover, .btn-switch:hover, .btn-sort:hover {
+    background-color: #1e3d6f;
+}
+
+.btn-clear:hover {
+    background-color: #c82333;
+}
+
+.btn-export:hover {
+    background-color: #218838;
+}
+
+.results-section {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.results-column {
+    flex: 1;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.vacancy-item {
+    background: white;
+    padding: 15px;
+    margin: 10px 0;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-left: 3px solid #2c5aa0;
+    position: relative;
+}
+
+.vacancy-item.high-paid {
+    border-left-color: #28a745;
+    background: #f8fff9;
+}
+
+.vacancy-item .salary {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #2c5aa0;
+}
+
+.vacancy-item .city {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #e9ecef;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+}
+
+.vacancy-item .profession {
+    color: #2c5aa0;
+    margin-bottom: 8px;
+    font-size: 1.1em;
+}
+
+.filter-section {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: white;
+    border-radius: 5px;
+}
+
+.filter-section select {
+    margin: 0 10px;
+    padding: 5px;
+}
+
+.implementation-switcher {
+    margin-top: 20px;
+    padding: 15px;
+    background: #e9ecef;
+    border-radius: 8px;
+}
+
+.implementation-switcher select {
+    padding: 5px 10px;
+    margin: 0 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.stats {
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    font-size: 0.9em;
+}
+
+@media (max-width: 768px) {
+    .results-section {
+        flex-direction: column;
+    }
+    
+    .btn-add, .btn-switch, .btn-clear, .btn-export {
+        width: 100%;
+        margin-right: 0;
+    }
+}
+/* Адаптивность */
+@media (max-width: 768px) {
+    .vacancy-title {
+        float: none;
+        margin-bottom: 10px;
+    }
+    
+    .vacancy-date {
+        float: none;
+        display: inline-block;
+    }
+    
+    .benefit-item {
+        float: none;
+        width: 100%;
+        margin: 0 0 20px 0;
+        min-height: auto;
+    }
+    
+    .btn-apply {
+        float: none;
+        width: 100%;
+    }
+    
+    .vacancies-container {
+        padding: 15px;
+    }
+    
+    .benefits-section {
+        padding: 25px;
+    }
+    
+    .page-header h1 {
+        font-size: 1.8em;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .benefit-item {
+        width: 48%;
+        margin: 0 1% 20px 1%;
+    }
+}
+</style>
+
+<script>
+// ====== Функциональный стиль с прототипным наследованием ======
+
+// Базовый конструктор Vacancy
+function Vacancy(profession, salary, phone, city) {
+    this._profession = profession;
+    this._salary = salary;
+    this._phone = phone;
+    this._city = city;
+    this._id = Date.now() + Math.random();
+    this._createdDate = new Date().toLocaleDateString('ru-BY');
+}
+
+// Методы базового класса
+Vacancy.prototype = {
+    // Геттеры
+    getProfession: function() { return this._profession; },
+    getSalary: function() { return this._salary; },
+    getPhone: function() { return this._phone; },
+    getCity: function() { return this._city; },
+    getId: function() { return this._id; },
+    getCreatedDate: function() { return this._createdDate; },
+    
+    // Сеттеры
+    setProfession: function(value) { this._profession = value; },
+    setSalary: function(value) { this._salary = value; },
+    setPhone: function(value) { this._phone = value; },
+    setCity: function(value) { this._city = value; },
+    
+    // Метод для отображения вакансии
+    display: function() {
+        return `
+            <div class="vacancy-item" data-id="${this._id}">
+                <div class="city">${this._city}</div>
+                <div class="profession">${this._profession}</div>
+                <p><strong>Зарплата:</strong> <span class="salary">${this._salary} BYN</span></p>
+                <p><strong>Телефон:</strong> ${this.formatPhone(this._phone)}</p>
+                <p><strong>Добавлено:</strong> ${this._createdDate}</p>
+                <button onclick="deleteVacancy('${this._id}')" class="btn-delete">Удалить</button>
+            </div>
+        `;
+    },
+    
+    formatPhone: function(phone) {
+        // Форматирование номера
+        return phone.replace(/(\+375)(\d{2})(\d{3})(\d{2})(\d{2})/, '$1 ($2) $3-$4-$5');
+    }
+};
+
+// Конструктор ExtendedVacancy (наследник)
+function ExtendedVacancy(profession, salary, phone, city, email, experience) {
+    Vacancy.call(this, profession, salary, phone, city);
+    this._email = email || 'Не указан';
+    this._experience = experience || 'Не указан';
+}
+
+// Прототипное наследование
+ExtendedVacancy.prototype = Object.create(Vacancy.prototype);
+ExtendedVacancy.prototype.constructor = ExtendedVacancy;
+
+// Дополнительные методы для наследника
+ExtendedVacancy.prototype.getEmail = function() { return this._email; };
+ExtendedVacancy.prototype.getExperience = function() { return this._experience; };
+ExtendedVacancy.prototype.setEmail = function(value) { this._email = value; };
+ExtendedVacancy.prototype.setExperience = function(value) { this._experience = value; };
+
+// Переопределение метода display
+ExtendedVacancy.prototype.display = function() {
+    return `
+        <div class="vacancy-item" data-id="${this._id}">
+            <div class="city">${this._city}</div>
+            <div class="profession">${this._profession}</div>
+            <p><strong>Зарплата:</strong> <span class="salary">${this._salary} BYN</span></p>
+            <p><strong>Телефон:</strong> ${this.formatPhone(this._phone)}</p>
+            <p><strong>Email:</strong> ${this._email}</p>
+            <p><strong>Опыт:</strong> ${this._experience}</p>
+            <p><strong>Добавлено:</strong> ${this._createdDate}</p>
+            <button onclick="deleteVacancy('${this._id}')" class="btn-delete">Удалить</button>
+        </div>
+    `;
+};
+
+// Менеджер вакансий для прототипной версии
+const PrototypeVacancyManager = {
+    vacancies: [],
+    
+    addVacancy: function(formData) {
+        const profession = formData.get('profession');
+        const salary = parseInt(formData.get('salary'));
+        const phone = formData.get('phone');
+        const city = formData.get('city');
+        const email = formData.get('email');
+        const experience = formData.get('experience');
+        
+        // Валидация номера
+        if (!this.validateBelarusPhone(phone)) {
+            alert('Пожалуйста, введите корректный номер телефона в формате: +375XXXXXXXXX');
+            return;
+        }
+        
+        let vacancy;
+        if (email || experience) {
+            vacancy = new ExtendedVacancy(profession, salary, phone, city, email, experience);
+        } else {
+            vacancy = new Vacancy(profession, salary, phone, city);
+        }
+        
+        this.vacancies.push(vacancy);
+        this.saveToLocalStorage();
+        this.updateDisplay();
+    },
+    
+    validateBelarusPhone: function(phone) {
+        const phoneRegex = /^\+375(25|29|33|44)\d{7}$/;
+        return phoneRegex.test(phone.replace(/\s|\(|\)|-/g, ''));
+    },
+    
+    displayAllVacancies: function() {
+        if (this.vacancies.length === 0) {
+            return '<p>Нет добавленных вакансий</p>';
+        }
+        return this.vacancies.map(v => v.display()).join('');
+    },
+    
+    getHighPaidVacancies: function() {
+        const professions = [...new Set(this.vacancies.map(v => v.getProfession()))];
+        let result = '';
+        
+        professions.forEach(profession => {
+            const professionVacancies = this.vacancies.filter(v => v.getProfession() === profession);
+            if (professionVacancies.length > 1) {
+                const avgSalary = professionVacancies.reduce((sum, v) => sum + v.getSalary(), 0) / professionVacancies.length;
+                const highPaid = professionVacancies.filter(v => v.getSalary() > avgSalary);
+                
+                if (highPaid.length > 0) {
+                    result += `<div class="stats">Профессия: <strong>${profession}</strong> | Средняя зарплата: <strong>${avgSalary.toFixed(0)} BYN</strong></div>`;
+                    result += highPaid.map(v => {
+                        const display = v.display();
+                        return display.replace('vacancy-item', 'vacancy-item high-paid');
+                    }).join('');
+                }
+            }
+        });
+        
+        return result || '<p>Нет высокооплачиваемых вакансий</p>';
+    },
+    
+    updateDisplay: function() {
+        document.getElementById('allVacancies').innerHTML = this.displayAllVacancies();
+        document.getElementById('highPaidVacancies').innerHTML = this.getHighPaidVacancies();
+        document.getElementById('vacanciesCount').textContent = `(${this.vacancies.length})`;
+    },
+    
+    saveToLocalStorage: function() {
+        const data = this.vacancies.map(v => ({
+            type: v instanceof ExtendedVacancy ? 'extended' : 'base',
+            profession: v.getProfession(),
+            salary: v.getSalary(),
+            phone: v.getPhone(),
+            city: v.getCity(),
+            email: v.getEmail ? v.getEmail() : null,
+            experience: v.getExperience ? v.getExperience() : null,
+            id: v.getId(),
+            createdDate: v.getCreatedDate()
+        }));
+        localStorage.setItem('Vacancies', JSON.stringify(data));
+    },
+    
+    loadFromLocalStorage: function() {
+        const data = localStorage.getItem('Vacancies');
+        if (data) {
+            const parsedData = JSON.parse(data);
+            this.vacancies = parsedData.map(item => {
+                if (item.type === 'extended') {
+                    return new ExtendedVacancy(item.profession, item.salary, item.phone, item.city, item.email, item.experience);
+                } else {
+                    return new Vacancy(item.profession, item.salary, item.phone, item.city);
+                }
+            });
+            this.updateDisplay();
+        }
+    },
+    
+    deleteVacancy: function(id) {
+        this.vacancies = this.vacancies.filter(v => v.getId() !== id);
+        this.saveToLocalStorage();
+        this.updateDisplay();
+    },
+    
+    clearAllVacancies: function() {
+        if (confirm('Вы уверены, что хотите удалить все вакансии?')) {
+            this.vacancies = [];
+            this.saveToLocalStorage();
+            this.updateDisplay();
+        }
+    },
+    
+    filterByCity: function(city) {
+        const filtered = city ? this.vacancies.filter(v => v.getCity() === city) : this.vacancies;
+        document.getElementById('allVacancies').innerHTML = filtered.map(v => v.display()).join('') || '<p>Нет вакансий в выбранном городе</p>';
+    },
+    
+    sortBySalary: function() {
+        this.vacancies.sort((a, b) => b.getSalary() - a.getSalary());
+        this.updateDisplay();
+    }
+};
+
+// ====== Классы ES6 ======
+
+class VacancyBase {
+    constructor(profession, salary, phone, city) {
+        this._profession = profession;
+        this._salary = salary;
+        this._phone = phone;
+        this._city = city;
+        this._id = Date.now() + Math.random();
+        this._createdDate = new Date().toLocaleDateString('ru-BY');
+    }
+    
+    // Геттеры
+    get profession() { return this._profession; }
+    get salary() { return this._salary; }
+    get phone() { return this._phone; }
+    get city() { return this._city; }
+    get id() { return this._id; }
+    get createdDate() { return this._createdDate; }
+    
+    // Сеттеры
+    set profession(value) { this._profession = value; }
+    set salary(value) { this._salary = value; }
+    set phone(value) { this._phone = value; }
+    set city(value) { this._city = value; }
+    
+    // Метод для отображения
+    display() {
+        return `
+            <div class="vacancy-item" data-id="${this._id}">
+                <div class="city">${this._city}</div>
+                <div class="profession">${this._profession}</div>
+                <p><strong>Зарплата:</strong> <span class="salary">${this._salary} BYN</span></p>
+                <p><strong>Телефон:</strong> ${this.formatPhone(this._phone)}</p>
+                <p><strong>Добавлено:</strong> ${this._createdDate}</p>
+                <button onclick="deleteVacancy('${this._id}')" class="btn-delete">Удалить</button>
+            </div>
+        `;
+    }
+    
+    formatPhone(phone) {
+        return phone.replace(/(\+375)(\d{2})(\d{3})(\d{2})(\d{2})/, '$1 ($2) $3-$4-$5');
+    }
+}
+
+class ExtendedVacancyClass extends VacancyBase {
+    constructor(profession, salary, phone, city, email, experience) {
+        super(profession, salary, phone, city);
+        this._email = email || 'Не указан';
+        this._experience = experience || 'Не указан';
+    }
+    
+    // Дополнительные геттеры и сеттеры
+    get email() { return this._email; }
+    get experience() { return this._experience; }
+    set email(value) { this._email = value; }
+    set experience(value) { this._experience = value; }
+    
+    // Переопределение метода display
+    display() {
+        return `
+            <div class="vacancy-item" data-id="${this._id}">
+                <div class="city">${this._city}</div>
+                <div class="profession">${this._profession}</div>
+                <p><strong>Зарплата:</strong> <span class="salary">${this._salary} BYN</span></p>
+                <p><strong>Телефон:</strong> ${this.formatPhone(this._phone)}</p>
+                <p><strong>Email:</strong> ${this._email}</p>
+                <p><strong>Опыт:</strong> ${this._experience}</p>
+                <p><strong>Добавлено:</strong> ${this._createdDate}</p>
+                <button onclick="deleteVacancy('${this._id}')" class="btn-delete">Удалить</button>
+            </div>
+        `;
+    }
+}
+
+class ClassVacancyManager {
+    constructor() {
+        this.vacancies = [];
+        this.loadFromLocalStorage();
+    }
+    
+    addVacancy(formData) {
+        const profession = formData.get('profession');
+        const salary = parseInt(formData.get('salary'));
+        const phone = formData.get('phone');
+        const city = formData.get('city');
+        const email = formData.get('email');
+        const experience = formData.get('experience');
+        
+        if (!this.validateBelarusPhone(phone)) {
+            alert('Пожалуйста, введите корректный номер телефона в формате: +375XXXXXXXXX');
+            return;
+        }
+        
+        let vacancy;
+        if (email || experience) {
+            vacancy = new ExtendedVacancyClass(profession, salary, phone, city, email, experience);
+        } else {
+            vacancy = new VacancyBase(profession, salary, phone, city);
+        }
+        
+        this.vacancies.push(vacancy);
+        this.saveToLocalStorage();
+        this.updateDisplay();
+    }
+    
+    validateBelarusPhone(phone) {
+        const phoneRegex = /^\+375(25|29|33|44)\d{7}$/;
+        return phoneRegex.test(phone.replace(/\s|\(|\)|-/g, ''));
+    }
+    
+    displayAllVacancies() {
+        if (this.vacancies.length === 0) {
+            return '<p>Нет добавленных вакансий</p>';
+        }
+        return this.vacancies.map(v => v.display()).join('');
+    }
+    
+    getHighPaidVacancies() {
+        const professions = [...new Set(this.vacancies.map(v => v.profession))];
+        let result = '';
+        
+        professions.forEach(profession => {
+            const professionVacancies = this.vacancies.filter(v => v.profession === profession);
+            if (professionVacancies.length > 1) {
+                const avgSalary = professionVacancies.reduce((sum, v) => sum + v.salary, 0) / professionVacancies.length;
+                const highPaid = professionVacancies.filter(v => v.salary > avgSalary);
+                
+                if (highPaid.length > 0) {
+                    result += `<div class="stats">Профессия: <strong>${profession}</strong> | Средняя зарплата: <strong>${avgSalary.toFixed(0)} BYN</strong></div>`;
+                    result += highPaid.map(v => {
+                        const display = v.display();
+                        return display.replace('vacancy-item', 'vacancy-item high-paid');
+                    }).join('');
+                }
+            }
+        });
+        
+        return result || '<p>Нет высокооплачиваемых вакансий</p>';
+    }
+    
+    updateDisplay() {
+        document.getElementById('allVacancies').innerHTML = this.displayAllVacancies();
+        document.getElementById('highPaidVacancies').innerHTML = this.getHighPaidVacancies();
+        document.getElementById('vacanciesCount').textContent = `(${this.vacancies.length})`;
+    }
+    
+    saveToLocalStorage() {
+        const data = this.vacancies.map(v => ({
+            type: v instanceof ExtendedVacancyClass ? 'extended' : 'base',
+            profession: v.profession,
+            salary: v.salary,
+            phone: v.phone,
+            city: v.city,
+            email: v.email || null,
+            experience: v.experience || null,
+            id: v.id,
+            createdDate: v.createdDate
+        }));
+        localStorage.setItem('Vacancies', JSON.stringify(data));
+    }
+    
+    loadFromLocalStorage() {
+        const data = localStorage.getItem('Vacancies');
+        if (data) {
+            const parsedData = JSON.parse(data);
+            this.vacancies = parsedData.map(item => {
+                if (item.type === 'extended') {
+                    return new ExtendedVacancyClass(item.profession, item.salary, item.phone, item.city, item.email, item.experience);
+                } else {
+                    return new VacancyBase(item.profession, item.salary, item.phone, item.city);
+                }
+            });
+            this.updateDisplay();
+        }
+    }
+    
+    deleteVacancy(id) {
+        this.vacancies = this.vacancies.filter(v => v.id !== id);
+        this.saveToLocalStorage();
+        this.updateDisplay();
+    }
+    
+    clearAllVacancies() {
+        if (confirm('Вы уверены, что хотите удалить все вакансии?')) {
+            this.vacancies = [];
+            this.saveToLocalStorage();
+            this.updateDisplay();
+        }
+    }
+    
+    filterByCity(city) {
+        const filtered = city ? this.vacancies.filter(v => v.city === city) : this.vacancies;
+        document.getElementById('allVacancies').innerHTML = filtered.map(v => v.display()).join('') || '<p>Нет вакансий в выбранном городе</p>';
+    }
+    
+    sortBySalary() {
+        this.vacancies.sort((a, b) => b.salary - a.salary);
+        this.updateDisplay();
+    }
+}
+
+// ====== УПРАВЛЕНИЕ РЕАЛИЗАЦИЯМИ ======
+
+let currentManager = new ClassVacancyManager();
+
+function switchImplementation() {
+    const type = document.getElementById('implementationType').value;
+    
+    if (type === 'class') {
+        currentManager = new ClassVacancyManager();
+    } else {
+        currentManager = Object.create(PrototypeVacancyManager);
+        currentManager.vacancies = [];
+        currentManager.loadFromLocalStorage();
+    }
+    
+    addDemoData();
+    alert(`Переключено на ${type === 'class' ? 'классы ES6' : 'прототипное наследование'}`);
+}
+
+function deleteVacancy(id) {
+    currentManager.deleteVacancy(id);
+}
+
+function clearAllVacancies() {
+    currentManager.clearAllVacancies();
+}
+
+function filterByCity() {
+    const city = document.getElementById('cityFilter').value;
+    currentManager.filterByCity(city);
+}
+
+function sortBySalary() {
+    currentManager.sortBySalary();
+}
+
+function exportToJSON() {
+    const data = currentManager.vacancies.map(v => ({
+        profession: v.profession || v.getProfession(),
+        salary: v.salary || v.getSalary(),
+        phone: v.phone || v.getPhone(),
+        city: v.city || v.getCity(),
+        email: v.email || (v.getEmail ? v.getEmail() : 'Не указан'),
+        experience: v.experience || (v.getExperience ? v.getExperience() : 'Не указан'),
+        createdDate: v.createdDate || v.getCreatedDate()
+    }));
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'vacancies.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function addDemoData() {
+    if (currentManager.vacancies.length === 0) {
+        const demoData = [
+            ['Водитель-курьер', 1500, '+375291234567', 'Минск', 'hr@delivery.by', '1-3 года'],
+            ['Водитель-курьер', 1800, '+375331234568', 'Гродно'],
+            ['Курьер', 1200, '+375441234569', 'Минск', '', 'Без опыта'],
+            ['Курьер', 1400, '+375251234570', 'Брест', 'recruitment@company.by', '1-3 года'],
+            ['Менеджер по логистике', 2000, '+375291234571', 'Минск', 'logistics@delivery.by', '3-5 лет'],
+            ['Водитель-курьер', 1600, '+375331234572', 'Витебск']
+        ];
+        
+        demoData.forEach(data => {
+            const formData = new FormData();
+            formData.append('profession', data[0]);
+            formData.append('salary', data[1]);
+            formData.append('phone', data[2]);
+            formData.append('city', data[3]);
+            if (data[4]) formData.append('email', data[4]);
+            if (data[5]) formData.append('experience', data[5]);
+            
+            currentManager.addVacancy(formData);
+        });
+    }
+}
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('vacancyForm');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(form);
+        currentManager.addVacancy(formData);
+        form.reset();
+    });
+    
+    // Добавление демо-данные только если нет сохраненных данных
+    if (currentManager.vacancies.length === 0) {
+        addDemoData();
+    }
+});
+
+
+function showApplicationForm(vacancyId) {
+    alert('Форма отклика на вакансию #' + vacancyId + ' будет реализована в ближайшее время.');
+}
+</script>
+{% endblock %}

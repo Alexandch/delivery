@@ -1,0 +1,1893 @@
+{% extends "delivery_app/base.html" %}
+{% load static %}
+{% load url_helpers %}
+
+{% block title %}Каталог товаров - Доставка продуктов{% endblock %}
+
+{% block content %}
+
+<div class="floating-cart" id="floatingCart">
+    <div class="cart-icon">
+        🛒
+        <span class="cart-count" id="cartCount">0</span>
+    </div>
+    <div class="cart-tooltip">Корзина</div>
+</div>
+
+<div class="products-simple">
+    <!-- Заголовок с анимацией частиц -->
+    <div class="simple-header" id="animatedHeader">
+        <canvas id="particleCanvas"></canvas>
+        <div class="header-content">
+            <h1 data-scroll="fadeInUp">Каталог товаров</h1>
+            <div class="header-info" data-scroll="fadeInUp" data-scroll-delay="200">
+                <span>Актуально на: {% now "d.m.Y" %}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основное содержание -->
+    <div class="simple-content">
+        <!-- Форма фильтрации -->
+        <div class="filter-section">
+            <!-- Индикатор активных фильтров -->
+            {% if search_query or type_filter %}
+            <div style="margin-bottom: 15px; padding: 10px; background: #e8f4fc; border-radius: 6px; border-left: 4px solid #3498db;"
+                data-scroll="slideInDown">
+                <strong>Активные фильтры:</strong>
+                {% if search_query %}<span class="filter-indicator">Поиск: "{{ search_query }}"</span>{% endif %}
+                {% if type_filter %}<span class="filter-indicator">Тип: {{ type_filter }}</span>{% endif %}
+                {% if sort_by != 'name' %}<span class="filter-indicator">Сортировка: {{ sort_by }}</span>{% endif %}
+            </div>
+            {% endif %}
+
+            <form method="get" class="product-filter-form" data-scroll="fadeInUp" data-scroll-delay="400">
+                <!-- Сохраняем параметры пагинации -->
+                <input type="hidden" name="per_page" value="{{ per_page }}">
+                <!-- При применении фильтров возвращаемся на первую страницу -->
+                <input type="hidden" name="page" value="1">
+
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label for="search">Поиск товаров</label>
+                        <input type="text" id="search" name="search" value="{{ search_query }}"
+                            placeholder="Введите название или описание товара...">
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="type">Тип товара</label>
+                        <select id="type" name="type">
+                            <option value="">Все типы товаров</option>
+                            {% for type in product_types %}
+                            <option value="{{ type.name }}" {% if type_filter == type.name %}selected{% endif %}>
+                                {{ type.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="sort">Сортировка</label>
+                        <select id="sort" name="sort">
+                            <option value="name" {% if sort_by == 'name' %}selected{% endif %}>По названию (А-Я)</option>
+                            <option value="-name" {% if sort_by == '-name' %}selected{% endif %}>По названию (Я-А)
+                            </option>
+                            <option value="price" {% if sort_by == 'price' %}selected{% endif %}>По цене (возрастание)
+                            </option>
+                            <option value="-price" {% if sort_by == '-price' %}selected{% endif %}>По цене (убывание)
+                            </option>
+                            <option value="stock" {% if sort_by == 'stock' %}selected{% endif %}>По наличию</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-actions">
+                        <button type="submit" class="filter-btn">
+                            <span class="btn-icon">🔍</span>
+                            Применить фильтры
+                        </button>
+                        <a href="{% url 'delivery_app:product_list' %}?per_page={{ per_page }}" class="reset-btn">
+                            <span class="btn-icon">🔄</span>
+                            Сбросить
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Сетка товаров -->
+        <div class="products-section">
+            {% if products %}
+            <div class="products-grid-container">
+                <!-- Заголовок сетки -->
+                <div class="grid-header">
+                    <h2 data-scroll="fadeInUp">Список товаров</h2>
+                    <span class="products-count" data-scroll="fadeInUp" data-scroll-delay="200">
+                        {% if products %}
+                        Найдено товаров: {{ paginator.count }}
+                        {% else %}
+                        Товары не найдены
+                        {% endif %}
+                    </span>
+                </div>
+
+                <!-- CSS Grid Layout для товаров -->
+                <div class="products-grid">
+                    {% for product in products %}
+                    <article class="product-card" data-product-id="{{ product.id }}" 
+                             data-scroll="fadeInUp" data-scroll-delay="{{ forloop.counter0|add:100 }}">
+                        <!-- Верхняя часть карточки -->
+                        <div class="card-header">
+                            <div class="product-image-container">
+                                {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image"
+                                    loading="lazy">
+                                {% else %}
+                                <div class="product-image-placeholder">
+                                    <span class="placeholder-icon">🛒</span>
+                                </div>
+                                {% endif %}
+
+                                <!-- Бейдж категории -->
+                                <div class="category-badge">
+                                    {{ product.product_type.name }}
+                                </div>
+
+                                <!-- Статус наличия -->
+                                <div class="stock-status {% if product.stock > 0 %}in-stock{% else %}out-of-stock{% endif %}">
+                                    {% if product.stock > 0 %}
+                                    ✅ В наличии
+                                    {% else %}
+                                    ❌ Нет в наличии
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Основная информация -->
+                        <div class="card-body">
+                            <h3 class="product-name">{{ product.name }}</h3>
+                            <p class="product-description">
+                                {{ product.description|truncatewords:20 }}
+                            </p>
+
+                            <div class="product-meta">
+                                <div class="price-section">
+                                    <span class="price-value">{{ product.price }}</span>
+                                    <span class="price-currency">BYN</span>
+                                </div>
+
+                                {% if product.stock > 0 %}
+                                <div class="stock-info">
+                                    <span class="stock-label">Остаток:</span>
+                                    <span class="stock-count">{{ product.stock }} шт.</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Кнопки действий -->
+                        <div class="card-footer">
+                            <div class="action-buttons">
+                                <a href="{% url 'delivery_app:product_detail' product.id %}" class="detail-btn"
+                                    title="Подробнее о товаре">
+                                    <span class="btn-icon">👁️</span>
+                                    Подробнее
+                                </a>
+
+                                {% if product.stock > 0 %}
+                                <form method="post" action="{% url 'delivery_app:add_to_cart' product.id %}"
+                                    class="add-to-cart-form">
+                                    {% csrf_token %}
+                                    <div class="quantity-section">
+                                        <label for="quantity-{{ product.id }}">Кол-во:</label>
+                                        <input type="number" id="quantity-{{ product.id }}" name="quantity" value="1"
+                                            min="1" max="{{ product.stock }}" class="quantity-input">
+                                    </div>
+                                    <button type="submit" class="cart-btn" 
+                                            data-product-id="{{ product.id }}"
+                                            data-product-name="{{ product.name }}"
+                                            data-product-image="{% if product.image %}{{ product.image.url }}{% else %}{% static 'delivery_app/images/default-product.png' %}{% endif %}">
+                                        <span class="btn-icon">🛒</span>
+                                        В корзину
+                                    </button>
+                                </form>
+                                {% else %}
+                                <button class="cart-btn disabled" disabled>
+                                    <span class="btn-icon">⛔</span>
+                                    Недоступно
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <!-- Состояние пустого списка -->
+            <div class="empty-state" data-scroll="zoomIn">
+                <div class="empty-icon">📦</div>
+                <h3>Товары не найдены</h3>
+                <p>Попробуйте изменить параметры поиска или фильтрации</p>
+                <a href="{% url 'delivery_app:product_list' %}?per_page={{ per_page }}" class="reset-btn large">
+                    <span class="btn-icon">🔄</span>
+                    Показать все товары
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- пагинация -->
+        <div class="pagination-section" data-scroll="fadeInUp">
+            <!-- управление отображением -->
+            <div class="pagination-controls">
+                <!-- выбор количества товаров -->
+                <div class="per-page-selector">
+                    <form method="get" class="per-page-form">
+                        <!-- сохранить все параметры кроме page и per_page -->
+                        {% for key, value in request.GET.items %}
+                        {% if key != 'page' and key != 'per_page' %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                        {% endif %}
+                        {% endfor %}
+
+                        <div class="form-group">
+                            <label for="per_page" class="form-label">Товаров на странице:</label>
+                            <select name="per_page" id="per_page" class="form-select" onchange="this.form.submit()">
+                                <option value="3" {% if per_page == 3 %}selected{% endif %}>3</option>
+                                <option value="6" {% if per_page == 6 %}selected{% endif %}>6</option>
+                                <option value="9" {% if per_page == 9 %}selected{% endif %}>9</option>
+                                <option value="12" {% if per_page == 12 %}selected{% endif %}>12</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Информация о странице -->
+                <div class="page-info">
+                    <span class="info-text">
+                        Страница <strong>{{ page_obj.number }}</strong> из <strong>{{ paginator.num_pages }}</strong>
+                    </span>
+                    <span class="info-text">
+                        Показано <strong>{{ page_obj.start_index }}-{{ page_obj.end_index }}</strong> из <strong>{{ paginator.count }}</strong> товаров
+                    </span>
+                </div>
+            </div>
+
+            <!-- Навигация по страницам -->
+            {% if is_paginated and paginator.num_pages > 1 %}
+            <nav class="pagination-nav" aria-label="Навигация по страницам">
+                <ul class="pagination">
+                    <!-- Первая страница -->
+                    {% if page_obj.number > 3 %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% url_replace page=1 %}" aria-label="Первая страница">
+                            <span aria-hidden="true">««</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Предыдущая страница -->
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% url_replace page=page_obj.previous_page_number %}"
+                            aria-label="Предыдущая">
+                            <span aria-hidden="true">‹</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" aria-hidden="true">‹</span>
+                    </li>
+                    {% endif %}
+
+                    <!-- Номера страниц с умным отображением -->
+                    {% for num in paginator.page_range %}
+                    {% if num == page_obj.number %}
+                    <li class="page-item active" aria-current="page">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% else %}
+                    {% if num <= page_obj.number|add:2 and num >= page_obj.number|add:-2 %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% url_replace page=num %}">{{ num }}</a>
+                        </li>
+                        {% elif num == 1 or num == paginator.num_pages %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% url_replace page=num %}">{{ num }}</a>
+                        </li>
+                        {% elif num == page_obj.number|add:3 or num == page_obj.number|add:-3 %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                        {% endif %}
+                        {% endfor %}
+
+                        <!-- Следующая страница -->
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% url_replace page=page_obj.next_page_number %}"
+                                aria-label="Следующая">
+                                <span aria-hidden="true">›</span>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link" aria-hidden="true">›</span>
+                        </li>
+                        {% endif %}
+
+                        <!-- Последняя страница -->
+                        {% if page_obj.number < paginator.num_pages|add:-2 %} <li class="page-item">
+                            <a class="page-link" href="?{% url_replace page=paginator.num_pages %}"
+                                aria-label="Последняя страница">
+                                <span aria-hidden="true">»»</span>
+                            </a>
+                            </li>
+                            {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    /* === ОСНОВНЫЕ СТИЛИ === */
+    .products-simple * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    .products-simple {
+        max-width: 1400px;
+        margin: 80px auto 40px;
+        padding: 0 20px;
+        font-family: 'Inter', Arial, sans-serif;
+        line-height: 1.5;
+    }
+
+        /* === АНИМАЦИИ ПРИ СКРОЛЛИНГЕ === */
+    [data-scroll] {
+        opacity: 0;
+        transform: translateY(50px);
+        transition: all 0.8s ease;
+    }
+
+    [data-scroll].visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* Конкретные анимации */
+    .fadeInUp.visible { opacity: 1; transform: translateY(0); }
+    .slideInDown.visible { opacity: 1; transform: translateY(0); }
+    .zoomIn.visible { opacity: 1; transform: scale(1); }
+
+    .fadeInUp { opacity: 0; transform: translateY(50px); }
+    .slideInDown { opacity: 0; transform: translateY(-50px); }
+    .zoomIn { opacity: 0; transform: scale(0.8); }
+
+    /* === ЗАГОЛОВОК С АНИМАЦИЕЙ ЧАСТИЦ === */
+    .simple-header {
+        position: relative;
+        background: linear-gradient(135deg, #adbcff 0%, #cf9fff 100%);
+        color: white;
+        padding: 25px 30px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        text-align: center;
+        overflow: hidden;
+        min-height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #particleCanvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+    }
+
+    .header-content {
+        position: relative;
+        z-index: 2;
+        width: 100%;
+    }
+
+    .simple-header h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .header-info {
+        font-size: 14px;
+        opacity: 0.9;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    /* === ФИКСИРОВАННАЯ КОРЗИНА === */
+    .floating-cart {
+        position: fixed;
+        top: 120px;
+        right: 30px;
+        z-index: 1000;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .floating-cart:hover {
+        transform: scale(1.1);
+    }
+
+    .cart-icon {
+        position: relative;
+        font-size: 2em;
+        background: #2c5aa0;
+        color: white;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 20px rgba(44, 90, 160, 0.3);
+    }
+
+    .cart-count {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background: #dc3545;
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7em;
+        font-weight: bold;
+        animation: pulse 2s infinite;
+    }
+
+    .cart-tooltip {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: #333;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        white-space: nowrap;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+        pointer-events: none;
+    }
+
+    .floating-cart:hover .cart-tooltip {
+        opacity: 1;
+        transform: translateY(5px);
+    }
+
+    /* Анимация пульсации */
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    /* Анимация подпрыгивания корзины */
+    @keyframes bounce {
+        0%, 20%, 60%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-10px); }
+        80% { transform: translateY(-5px); }
+    }
+
+    .cart-bounce {
+        animation: bounce 0.5s ease;
+    }
+
+    /* === ЛЕТАЮЩИЙ ПРОДУКТ === */
+    .flying-product {
+        position: fixed;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5em;
+        z-index: 999;
+        pointer-events: none;
+        transition: all 0.1s linear;
+    }
+
+    .flying-product img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    /* Анимация успешного добавления */
+    @keyframes successAdd {
+        0% { background: #28a745; transform: scale(1); }
+        50% { background: #20c997; transform: scale(1.1); }
+        100% { background: #28a745; transform: scale(1); }
+    }
+
+    .success-add {
+        animation: successAdd 0.5s ease;
+    }
+
+    /* Основной контент */
+    .simple-content {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 30px;
+    }
+
+    /* === ФОРМА ФИЛЬТРАЦИИ === */
+    .filter-section {
+        margin-bottom: 30px;
+        padding-bottom: 25px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        align-items: end;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .filter-group label {
+        font-weight: 600;
+        color: #2c5aa0;
+        font-size: 14px;
+    }
+
+    .filter-group input,
+    .filter-group select {
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .filter-group input:focus,
+    .filter-group select:focus {
+        outline: none;
+        border-color: #2c5aa0;
+        box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+        align-items: end;
+    }
+
+    .filter-btn,
+    .reset-btn {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .filter-btn {
+        background: #2c5aa0;
+        color: white;
+    }
+
+    .filter-btn:hover {
+        background: #1e3d6f;
+        transform: translateY(-1px);
+    }
+
+    .reset-btn {
+        background: #6c757d;
+        color: white;
+    }
+
+    .reset-btn:hover {
+        background: #5a6268;
+        transform: translateY(-1px);
+    }
+
+    .btn-icon {
+        font-size: 12px;
+    }
+
+    /* === CSS GRID LAYOUT ДЛЯ ТОВАРОВ === */
+    .products-grid-container {
+        margin-top: 20px;
+    }
+
+    .grid-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding: 0 10px;
+    }
+
+    .grid-header h2 {
+        color: #2c5aa0;
+        font-size: 20px;
+        margin: 0;
+    }
+
+    .products-count {
+        color: #6c757d;
+        font-size: 14px;
+        background: #f8f9fa;
+        padding: 6px 12px;
+        border-radius: 15px;
+    }
+
+    /* Основная CSS Grid сетка */
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 25px;
+        align-items: stretch;
+    }
+
+    /* Карточка товара */
+    .product-card {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .product-card:hover {
+        border-color: #2c5aa0;
+        box-shadow: 0 8px 25px rgba(44, 90, 160, 0.15);
+        transform: translateY(-5px);
+    }
+
+    /* Верхняя часть карточки */
+    .card-header {
+        position: relative;
+        background: #f8f9fa;
+        padding: 0;
+    }
+
+    .product-image-container {
+        position: relative;
+        height: 200px;
+        overflow: hidden;
+    }
+
+    .product-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .product-card:hover .product-image {
+        transform: scale(1.05);
+    }
+
+    .product-image-placeholder {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+    }
+
+    .placeholder-icon {
+        font-size: 48px;
+        opacity: 0.5;
+    }
+
+    /* Бейдж категории */
+    .category-badge {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: rgba(44, 90, 160, 0.9);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
+    }
+
+    /* Статус наличия */
+    .stock-status {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        padding: 6px 10px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
+    }
+
+    .stock-status.in-stock {
+        background: rgba(40, 167, 69, 0.9);
+        color: white;
+    }
+
+    .stock-status.out-of-stock {
+        background: rgba(220, 53, 69, 0.9);
+        color: white;
+    }
+
+    /* Основная информация */
+    .card-body {
+        padding: 20px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .product-name {
+        color: #2c5aa0;
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+        line-height: 1.3;
+    }
+
+    .product-description {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.5;
+        margin: 0;
+        flex: 1;
+    }
+
+    .product-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto;
+    }
+
+    .price-section {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+    }
+
+    .price-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #28a745;
+    }
+
+    .price-currency {
+        font-size: 14px;
+        color: #6c757d;
+    }
+
+    .stock-info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 2px;
+    }
+
+    .stock-label {
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    .stock-count {
+        font-size: 14px;
+        font-weight: 600;
+        color: #28a745;
+    }
+
+    /* Нижняя часть карточки */
+    .card-footer {
+        padding: 0 20px 20px;
+        border-top: 1px solid #f0f0f0;
+        margin-top: 15px;
+        padding-top: 15px;
+    }
+
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .detail-btn {
+        background: #17a2b8;
+        color: white;
+        padding: 10px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 14px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+
+    .detail-btn:hover {
+        background: #138496;
+        transform: translateY(-1px);
+    }
+
+    .add-to-cart-form {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .quantity-section {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+    }
+
+    .quantity-section label {
+        font-size: 12px;
+        color: #666;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .quantity-input {
+        width: 60px;
+        padding: 6px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .quantity-input:focus {
+        outline: none;
+        border-color: #2c5aa0;
+    }
+
+    .cart-btn {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+        font-weight: 500;
+        flex: 2;
+    }
+
+    .cart-btn:hover:not(:disabled) {
+        background: #218838;
+        transform: translateY(-1px);
+    }
+
+    .cart-btn:disabled,
+    .cart-btn.disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        opacity: 0.6;
+        transform: none;
+    }
+
+    /* Состояние пустого списка */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 2px dashed #e0e0e0;
+        margin-top: 30px;
+    }
+
+    .empty-icon {
+        font-size: 48px;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .empty-state p {
+        margin-bottom: 20px;
+    }
+
+    .reset-btn.large {
+        padding: 12px 24px;
+        font-size: 16px;
+    }
+
+/* === УЛУЧШЕННАЯ ПАГИНАЦИЯ === */
+.pagination-section {
+    margin-top: 40px;
+    padding-top: 25px;
+    border-top: 1px solid #e8ecef;
+}
+
+.pagination-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.per-page-selector {
+    display: flex;
+    align-items: center;
+}
+
+.per-page-form .form-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.form-select {
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 70px;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: #2c5aa0;
+    box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
+}
+
+.page-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: right;
+}
+
+.info-text {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.info-text strong {
+    color: #2c5aa0;
+    font-weight: 600;
+}
+
+/* Навигация */
+.pagination-nav {
+    display: flex;
+    justify-content: center;
+}
+
+.pagination {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 6px;
+    align-items: center;
+}
+
+.page-item {
+    margin: 0;
+}
+
+.page-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    color: #2c5aa0;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    min-width: 42px;
+    height: 42px;
+    transition: all 0.3s ease;
+    background: white;
+    position: relative;
+}
+
+.page-link:hover {
+    background: #2c5aa0;
+    color: white;
+    border-color: #2c5aa0;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(44, 90, 160, 0.2);
+}
+
+.page-item.active .page-link {
+    background: #2c5aa0;
+    color: white;
+    border-color: #2c5aa0;
+    box-shadow: 0 2px 8px rgba(44, 90, 160, 0.3);
+}
+
+.page-item.disabled .page-link {
+    color: #adb5bd;
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
+    box-shadow: none;
+}
+
+.page-item.disabled .page-link:hover {
+    background: #f8f9fa;
+    color: #adb5bd;
+    border-color: #dee2e6;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Анимация при переключении страниц */
+.pagination-section {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .pagination-controls {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+    
+    .per-page-form .form-group {
+        justify-content: center;
+    }
+    
+    .page-info {
+        text-align: center;
+        order: -1;
+    }
+    
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .page-link {
+        padding: 6px 10px;
+        min-width: 38px;
+        height: 38px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pagination-section {
+        margin-top: 30px;
+        padding-top: 20px;
+    }
+    
+    .pagination-controls {
+        gap: 15px;
+    }
+    
+    .page-info {
+        font-size: 13px;
+    }
+    
+    .form-label {
+        font-size: 13px;
+    }
+    
+    .form-select {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+    
+    .pagination {
+        gap: 4px;
+    }
+    
+    .page-link {
+        padding: 5px 8px;
+        min-width: 36px;
+        height: 36px;
+        font-size: 12px;
+    }
+}
+
+/* Плавные переходы для всех интерактивных элементов */
+.pagination-section * {
+    transition: all 0.3s ease;
+}
+
+/* Улучшенная доступность */
+.page-link:focus {
+    outline: 2px solid #2c5aa0;
+    outline-offset: 2px;
+}
+
+.page-item.active .page-link:focus {
+    outline-color: white;
+}
+
+/* Микро-анимация при наведении */
+@keyframes gentlePulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.page-link:hover {
+    animation: gentlePulse 0.3s ease;
+}
+    /* === АДАПТИВНОСТЬ CSS GRID === */
+    @media (max-width: 1200px) {
+        .products-grid {
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .filter-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .products-simple {
+            margin: 70px auto 30px;
+            padding: 0 15px;
+        }
+
+        .simple-header {
+            padding: 20px;
+        }
+
+        .simple-header h1 {
+            font-size: 20px;
+        }
+
+        .simple-content {
+            padding: 20px;
+        }
+
+        .filter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-actions {
+            flex-direction: column;
+        }
+
+        .grid-header {
+            flex-direction: column;
+            gap: 10px;
+            text-align: center;
+        }
+
+        /* Адаптация CSS Grid для мобильных */
+        .products-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .add-to-cart-form {
+            flex-direction: column;
+        }
+
+        .quantity-section {
+            justify-content: space-between;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .simple-header {
+            padding: 15px;
+        }
+
+        .simple-content {
+            padding: 15px;
+        }
+
+        /* Одна колонка на очень маленьких экранах */
+        .products-grid {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .product-image-container {
+            height: 180px;
+        }
+
+        .card-body {
+            padding: 15px;
+        }
+
+        .card-footer {
+            padding: 0 15px 15px;
+        }
+
+        .empty-state {
+            padding: 40px 15px;
+        }
+    }
+
+    /* Дополнительные эффекты для CSS Grid */
+    .products-grid {
+        /* Плавное появление элементов сетки */
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Стили для псевдоклассов */
+    .product-card:nth-child(odd) {
+        background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+    }
+
+    .product-card:nth-child(even) {
+        background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+    }
+
+    .product-card:focus-within {
+        border-color: #2c5aa0;
+        box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
+    }
+
+    /* Стили для разных состояний товаров */
+    .product-card[data-stock="0"] {
+        opacity: 0.7;
+        background: linear-gradient(135deg, #fff5f5 0%, #ffeaea 100%);
+    }
+
+    .product-card[data-stock="0"]:hover {
+        opacity: 0.9;
+    }
+
+    /* Выделение текста */
+    ::selection {
+        background-color: #2c5aa0;
+        color: white;
+    }
+
+    ::-moz-selection {
+        background-color: #2c5aa0;
+        color: white;
+    }
+
+    /* Плавные переходы */
+    .product-card,
+    .filter-btn,
+    .reset-btn,
+    .detail-btn,
+    .cart-btn {
+        transition: all 0.3s ease;
+    }
+
+    /* Валидация форм */
+    .quantity-input:invalid {
+        border-color: #dc3545;
+        background-color: #fff5f5;
+    }
+
+    .quantity-input:valid {
+        border-color: #28a745;
+        background-color: #f8fff9;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // атрибут data-stock для стилизации отсутствующих товаров
+        document.querySelectorAll('.product-card').forEach(card => {
+            const stockStatus = card.querySelector('.stock-status.out-of-stock');
+            if (stockStatus) {
+                card.setAttribute('data-stock', '0');
+            }
+        });
+
+        // Валидация количества при вводе
+        document.querySelectorAll('.quantity-input').forEach(input => {
+            input.addEventListener('change', function () {
+                const max = parseInt(this.getAttribute('max'));
+                const value = parseInt(this.value);
+
+                if (value > max) {
+                    this.value = max;
+                    this.reportValidity();
+                }
+
+                if (value < 1) {
+                    this.value = 1;
+                }
+            });
+
+            input.addEventListener('input', function () {
+                if (this.validity.rangeOverflow) {
+                    this.setCustomValidity('Максимальное количество: ' + this.getAttribute('max'));
+                } else if (this.validity.rangeUnderflow) {
+                    this.setCustomValidity('Минимальное количество: 1');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+        });
+
+        // Плавная прокрутка к сетке после фильтрации
+        const filterForm = document.querySelector('.product-filter-form');
+        if (filterForm) {
+            filterForm.addEventListener('submit', function () {
+                setTimeout(() => {
+                    document.querySelector('.products-section').scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }, 100);
+            });
+        }
+
+        // Анимация появления карточек с задержкой
+        const productCards = document.querySelectorAll('.product-card');
+        productCards.forEach((card, index) => {
+            card.style.animationDelay = `${index * 0.1}s`;
+        });
+    });
+
+    // Функция для обновления счетчика товаров
+    function updateProductsCount() {
+        const productsGrid = document.querySelector('.products-grid');
+        const productCards = productsGrid.querySelectorAll('.product-card:not([style*="display: none"])');
+        const productsCount = document.querySelector('.products-count');
+
+        if (productsCount && productCards.length > 0) {
+            productsCount.textContent = `Показано ${productCards.length} товаров`;
+        }
+    }
+
+    // Обработчик для быстрой смены количества товаров на странице
+    document.addEventListener('DOMContentLoaded', function () {
+        const perPageSelect = document.getElementById('per_page');
+        if (perPageSelect) {
+            perPageSelect.addEventListener('change', function () {
+                // индикатор загрузки
+                const productsSection = document.querySelector('.products-section');
+                if (productsSection) {
+                    productsSection.style.opacity = '0.7';
+                    productsSection.style.transition = 'opacity 0.3s ease';
+                }
+            });
+        }
+
+        // Плавная прокрутка к верху при смене страницы
+        const paginationLinks = document.querySelectorAll('.page-link[href*="page="]');
+        paginationLinks.forEach(link => {
+            link.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href && href.includes('page=')) {
+                    e.preventDefault();
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                    // время для прокрутки перед переходом
+                    setTimeout(() => {
+                        window.location.href = href;
+                    }, 300);
+                }
+            });
+        });
+
+        // Обновление счетчика при загрузке
+        updateProductsCount();
+    });
+    
+    // анимация частиц
+    class ParticleBackground {
+        constructor() {
+            this.canvas = document.getElementById('particleCanvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.particles = [];
+            this.mouse = { x: null, y: null, radius: 120 };
+            this.scrollY = 0;
+            this.lastScrollY = 0;
+            this.scrollVelocity = 0;
+            this.isHeaderVisible = true;
+            this.headerElement = document.querySelector('.simple-header');
+            this.cumulativeScroll = 0;
+            
+            this.init();
+            this.animate();
+            
+            window.addEventListener('resize', () => this.resize());
+            window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+            window.addEventListener('scroll', () => this.handleScroll());
+            
+            this.createHeaderObserver();
+        }
+        
+        init() {
+            this.resize();
+            this.createParticles();
+        }
+        
+        resize() {
+            const header = document.querySelector('.simple-header');
+            this.canvas.width = header.offsetWidth;
+            this.canvas.height = header.offsetHeight;
+            this.createParticles();
+        }
+        
+        createParticles() {
+            this.particles = [];
+            const particleCount = 80; // Умеренное количество
+            
+            const colors = [
+                'rgba(255, 255, 255, 0.8)',
+                'rgba(255, 240, 245, 0.8)',
+                'rgba(220, 230, 255, 0.8)',
+                'rgba(255, 230, 240, 0.8)',
+                'rgba(240, 255, 240, 0.8)'
+            ];
+            
+            for (let i = 0; i < particleCount; i++) {
+                this.particles.push({
+                    x: Math.random() * this.canvas.width,
+                    y: Math.random() * this.canvas.height,
+                    size: Math.random() * 4 + 2, // размер
+                    baseSpeedX: Math.random() * 1 - 0.5,
+                    baseSpeedY: Math.random() * 1 - 0.5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    originalX: Math.random() * this.canvas.width,
+                    originalY: Math.random() * this.canvas.height,
+                    amplitude: Math.random() * 2 + 1, // амплитуда
+                    targetX: Math.random() * this.canvas.width,
+                    targetY: Math.random() * this.canvas.height,
+                    scatterFactor: Math.random() * 1 + 0.5 // фактор разлета
+                });
+                
+                this.particles[i].targetX = this.particles[i].originalX;
+                this.particles[i].targetY = this.particles[i].originalY;
+            }
+        }
+        
+        createHeaderObserver() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const wasVisible = this.isHeaderVisible;
+                    this.isHeaderVisible = entry.isIntersecting;
+                    
+                    if (this.isHeaderVisible && !wasVisible && this.scrollVelocity < 0) {
+                        this.returnParticlesToOriginal();
+                        this.cumulativeScroll = 0;
+                    }
+                });
+            }, {
+                threshold: 0.3
+            });
+            
+            observer.observe(this.headerElement);
+        }
+        
+        returnParticlesToOriginal() {
+            for (let particle of this.particles) {
+                particle.targetX = particle.originalX;
+                particle.targetY = particle.originalY;
+            }
+        }
+        
+        handleScroll() {
+            const newScrollY = window.scrollY;
+            this.scrollVelocity = newScrollY - this.lastScrollY;
+            this.lastScrollY = newScrollY;
+            
+            // Умеренное накопление
+            if (Math.abs(this.scrollVelocity) > 1) {
+                this.cumulativeScroll += Math.abs(this.scrollVelocity) * 0.03;
+                this.cumulativeScroll = Math.min(this.cumulativeScroll, 20);
+            }
+            
+            // Умеренный разлет при скролле вниз
+            if (this.scrollVelocity > 2 && this.isHeaderVisible) {
+                this.scatterParticles();
+            }
+        }
+        
+        scatterParticles() {
+            const centerX = this.canvas.width / 2;
+            const centerY = this.canvas.height / 2;
+            
+            // формула разлета
+            const baseScatterStrength = Math.min(this.scrollVelocity * 0.3, 15);
+            const cumulativeBoost = this.cumulativeScroll * 0.8;
+            const totalScatterStrength = baseScatterStrength + cumulativeBoost;
+            
+            for (let particle of this.particles) {
+                // случайное отклонение
+                const randomAngle = (Math.random() - 0.5) * 0.3;
+                const angle = Math.atan2(
+                    particle.y - centerY,
+                    particle.x - centerX
+                ) + randomAngle;
+                
+                // индивидуальная сила
+                const individualStrength = totalScatterStrength * particle.scatterFactor * particle.amplitude;
+                
+                particle.targetX = particle.x + Math.cos(angle) * individualStrength;
+                particle.targetY = particle.y + Math.sin(angle) * individualStrength;
+                
+                // границы
+                const margin = 100;
+                particle.targetX = Math.max(-margin, Math.min(this.canvas.width + margin, particle.targetX));
+                particle.targetY = Math.max(-margin, Math.min(this.canvas.height + margin, particle.targetY));
+            }
+        }
+        
+        handleMouseMove(e) {
+            const rect = this.canvas.getBoundingClientRect();
+            this.mouse.x = e.clientX - rect.left;
+            this.mouse.y = e.clientY - rect.top;
+        }
+        
+        animate() {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            // Плавное движение к целевым позициям
+            for (let particle of this.particles) {
+                const dx = particle.targetX - particle.x;
+                const dy = particle.targetY - particle.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // Умеренная скорость движения
+                const speed = Math.min(0.08 + distance * 0.001, 0.2);
+                particle.x += dx * speed;
+                particle.y += dy * speed;
+                
+                // Взаимодействие с мышью
+                if (this.mouse.x !== null && this.mouse.y !== null) {
+                    const dxMouse = particle.x - this.mouse.x;
+                    const dyMouse = particle.y - this.mouse.y;
+                    const mouseDistance = Math.sqrt(dxMouse * dxMouse + dyMouse * dyMouse);
+                    
+                    if (mouseDistance < this.mouse.radius) {
+                        const force = (this.mouse.radius - mouseDistance) / this.mouse.radius;
+                        const angle = Math.atan2(dyMouse, dxMouse);
+                        particle.x += Math.cos(angle) * force * 4;
+                        particle.y += Math.sin(angle) * force * 4;
+                        
+                        particle.targetX = particle.x;
+                        particle.targetY = particle.y;
+                    }
+                }
+            }
+            
+            // Отрисовка соединений
+            for (let i = 0; i < this.particles.length; i++) {
+                for (let j = i + 1; j < this.particles.length; j++) {
+                    const dx = this.particles[i].x - this.particles[j].x;
+                    const dy = this.particles[i].y - this.particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 120) {
+                        this.ctx.beginPath();
+                        const opacity = 0.3 * (1 - distance/120);
+                        this.ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+                        this.ctx.lineWidth = 1;
+                        this.ctx.moveTo(this.particles[i].x, this.particles[i].y);
+                        this.ctx.lineTo(this.particles[j].x, this.particles[j].y);
+                        this.ctx.stroke();
+                    }
+                }
+            }
+            
+            // Отрисовка частиц
+            for (let particle of this.particles) {
+                const glowRadius = particle.size * 3;
+                const gradient = this.ctx.createRadialGradient(
+                    particle.x, particle.y, 0,
+                    particle.x, particle.y, glowRadius
+                );
+                gradient.addColorStop(0, particle.color);
+                gradient.addColorStop(0.7, particle.color.replace('0.8', '0.3'));
+                gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                
+                this.ctx.beginPath();
+                this.ctx.arc(particle.x, particle.y, glowRadius, 0, Math.PI * 2);
+                this.ctx.fillStyle = gradient;
+                this.ctx.fill();
+                
+                this.ctx.beginPath();
+                this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                this.ctx.fillStyle = particle.color;
+                this.ctx.fill();
+                
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                this.ctx.lineWidth = 1;
+                this.ctx.stroke();
+            }
+            
+            requestAnimationFrame(() => this.animate());
+        }
+    }
+
+    // Анимация при скроллинге
+    class ScrollAnimation {
+        constructor() {
+            this.elements = document.querySelectorAll('[data-scroll]');
+            this.init();
+        }
+
+        init() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        this.animateElement(entry.target, true);
+                    } else {
+                        const rect = entry.target.getBoundingClientRect();
+                        if (rect.top < 0) {
+                            this.animateElement(entry.target, false);
+                        }
+                    }
+                });
+            }, {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            });
+
+            this.elements.forEach(element => {
+                observer.observe(element);
+            });
+        }
+
+        animateElement(element, isEntering) {
+            const animationType = element.getAttribute('data-scroll');
+            const delay = element.getAttribute('data-scroll-delay') || 0;
+            
+            setTimeout(() => {
+                if (isEntering) {
+                    element.classList.add('visible');
+                    if (animationType) {
+                        element.classList.add(animationType);
+                    }
+                } else {
+                    element.classList.remove('visible');
+                    if (animationType) {
+                        element.classList.remove(animationType);
+                    }
+                }
+            }, delay);
+        }
+    }
+    // Анимация добавления в корзину
+    class CartAnimation {
+        constructor() {
+            this.cartCount = 0;
+            this.cartElement = document.getElementById('cartCount');
+            this.cartButton = document.getElementById('floatingCart');
+            this.init();
+        }
+
+        init() {
+            // Обработчики для кнопок "В корзину"
+            document.addEventListener('submit', (e) => {
+                if (e.target.classList.contains('add-to-cart-form')) {
+                    e.preventDefault();
+                    this.handleAddToCart(e.target);
+                }
+            });
+
+            // Анимация корзины при наведении
+            this.cartButton.addEventListener('click', () => {
+                this.bounceCart();
+            });
+        }
+
+        handleAddToCart(form) {
+            const button = form.querySelector('.cart-btn');
+            const productId = button.getAttribute('data-product-id');
+            const productName = button.getAttribute('data-product-name');
+            const productImage = button.getAttribute('data-product-image');
+            const quantity = form.querySelector('.quantity-input').value;
+
+            // Анимация кнопки
+            this.animateButton(button);
+
+            // Создание летающего элемента
+            this.createFlyingProduct(button, productImage);
+
+            // Увеличиние счетчика
+            this.cartCount += parseInt(quantity);
+            this.updateCartCount();
+
+            // В реальном приложении здесь был бы AJAX запрос
+            console.log(`Товар ${productName} (${quantity} шт.) добавлен в корзину`);
+
+            // Отправка формы после анимации
+            setTimeout(() => {
+                form.submit();
+            }, 1000);
+        }
+
+        animateButton(button) {
+            button.classList.add('success-add');
+            button.innerHTML = '<span class="btn-icon">✅</span> Добавлено!';
+            button.disabled = true;
+
+            setTimeout(() => {
+                button.classList.remove('success-add');
+                button.innerHTML = '<span class="btn-icon">🛒</span> В корзину';
+                button.disabled = false;
+            }, 2000);
+        }
+
+        createFlyingProduct(button, productImage) {
+            const buttonRect = button.getBoundingClientRect();
+            const cartRect = this.cartButton.getBoundingClientRect();
+
+            // Создаем элемент продукта
+            const flyingProduct = document.createElement('div');
+            flyingProduct.className = 'flying-product';
+            
+            if (productImage) {
+                const img = document.createElement('img');
+                img.src = productImage;
+                img.alt = 'Product';
+                flyingProduct.appendChild(img);
+            } else {
+                flyingProduct.innerHTML = '📦';
+            }
+            
+            document.body.appendChild(flyingProduct);
+
+            // Позиционирование относительно кнопки
+            flyingProduct.style.left = buttonRect.left + 'px';
+            flyingProduct.style.top = buttonRect.top + 'px';
+            
+            // Запуск анимации полета
+            requestAnimationFrame(() => {
+                flyingProduct.style.transition = 'all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)';
+                flyingProduct.style.left = cartRect.left + 'px';
+                flyingProduct.style.top = cartRect.top + 'px';
+                flyingProduct.style.transform = 'scale(0.5)';
+                flyingProduct.style.opacity = '0.5';
+            });
+
+            // Удаление элемент после анимации
+            setTimeout(() => {
+                if (flyingProduct.parentNode) {
+                    flyingProduct.parentNode.removeChild(flyingProduct);
+                }
+                this.bounceCart();
+            }, 800);
+        }
+
+        updateCartCount() {
+            this.cartElement.textContent = this.cartCount;
+            
+            // Анимация счетчика
+            this.cartElement.style.transform = 'scale(1.3)';
+            setTimeout(() => {
+                this.cartElement.style.transform = 'scale(1)';
+            }, 300);
+        }
+
+        bounceCart() {
+            this.cartButton.classList.add('cart-bounce');
+            setTimeout(() => {
+                this.cartButton.classList.remove('cart-bounce');
+            }, 500);
+        }
+    }
+
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        // Запуск анимаций
+        new ParticleBackground();
+        new ScrollAnimation();
+        new CartAnimation();
+
+        console.log('Анимации инициализированы');
+
+        // обработчики
+        document.querySelectorAll('.quantity-input').forEach(input => {
+            input.addEventListener('change', function() {
+                const max = parseInt(this.getAttribute('max'));
+                const value = parseInt(this.value);
+
+                if (value > max) {
+                    this.value = max;
+                }
+
+                if (value < 1) {
+                    this.value = 1;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

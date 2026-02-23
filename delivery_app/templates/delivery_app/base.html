@@ -1,0 +1,1243 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Доставка продуктов - Быстро и удобно{% endblock %}</title>
+    <link rel="icon" href="{% static 'delivery_app/images/logo.png' %}" type="image/png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{% static 'delivery_app/css/style.css' %}">
+
+    <meta name="description"
+        content="Служба доставки свежих продуктов. Быстрая доставка, качественные продукты, доступные цены.">
+    <meta name="keywords" content="доставка продуктов, продукты, еда, доставка, покупки онлайн">
+    <meta property="og:title" content="Доставка продуктов - Быстро и удобно">
+    <meta property="og:description"
+        content="Служба доставки свежих продуктов. Быстрая доставка, качественные продукты, доступные цены.">
+    <meta property="og:image" content="{% static 'delivery_app/images/og-image.jpg' %}">
+    <meta property="og:url" content="http://127.0.0.1:8000">
+    <meta name="twitter:card" content="summary_large_image">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Доставка продуктов",
+        "url": "http://127.0.0.1:8000",
+        "logo": "{% static 'delivery_app/images/logo.png' %}",
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+375-17-123-45-67",
+            "contactType": "Customer service"
+        },
+        "sameAs": [
+            "https://www.facebook.com/yourpage",
+            "https://www.instagram.com/yourprofile",
+            "https://twitter.com/yourprofile"
+        ]
+    }
+    </script>
+
+    <style>
+        :root {
+            --primary-color: #2c5aa0;
+            --secondary-color: #f8f9fa;
+            --accent-color: #28a745;
+            --text-color: #333;
+            --light-text: #6c757d;
+            --border-color: #e9ecef;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #f0f8ff;
+            background-image:
+                radial-gradient(ellipse at 30% 20%, rgba(173, 216, 230, 0.4) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(135, 206, 250, 0.3) 0%, transparent 50%) fixed !important;
+            background-attachment: fixed !important;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;/* кернинг */
+        }
+
+        /* СЕЛЕКТОРЫ АТРИБУТОВ */
+        a[href^="/"] {
+            font-weight: 500;
+        }
+
+        a[href$=".html"]::after {
+            content: " 📄";
+        }
+
+        input[type="email"] {
+            border: 2px solid var(--primary-color);
+        }
+
+        /* СЕЛЕКТОРЫ КЛАССОВ И КОМБИНАЦИИ */
+        .nav-menu>li>a {
+            padding: 10px 15px;
+        }
+
+        .footer-links a+a {
+            margin-top: 5px;
+        }
+
+        /* ПСЕВДОКЛАССЫ ДЛЯ ССЫЛОК*/
+        a:link {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        /* Базовый стиль для всех посещенных ссылок */
+        a:visited {
+            color: #8c44be;
+        }
+
+        /* Для навигационных ссылок */
+        .nav-link:visited,
+        .navbar a:visited,
+        nav a:visited {
+            color: #5e3eb7;
+        }
+
+        /* Для кнопок */
+        .btn:visited,
+        .button:visited,
+        .btn-primary:visited {
+            color: #90abfe !important;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        a:hover {
+            color: #1e3d6f;
+            text-decoration: underline;
+            cursor: pointer;/* изменение курсора */
+        }
+
+        a:active {
+            color: var(--accent-color);
+            transform: scale(0.98);
+        }
+
+        a:focus {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        /* === ПСЕВДОКЛАССЫ ДЛЯ ФОРМ === */
+        input:required {
+            border-left: 4px solid #ff9800;
+        }
+
+        input:disabled {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        input:invalid {
+            border-color: #f44336;
+        }
+
+        input:checked+label {
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        /* === ПСЕВДОКЛАССЫ ДЛЯ СПИСКОВ === */
+        .nav-menu li:first-child a {
+            background-color: rgba(44, 90, 160, 0.1);
+        }
+
+        .nav-menu li:last-child a {
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .nav-menu li:nth-child(2n) a {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+
+        .mobile-nav-menu li:nth-of-type(3) {
+            font-weight: bold;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        /* === ПСЕВДОЭЛЕМЕНТЫ === */
+        /* Первая буква абзаца */
+        .article-content p::first-letter {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--primary-color);
+            float: left;
+            line-height: 1;
+            margin-right: 5px;
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Контент до и после */
+        .footer-section h3::before {
+            content: "✦ ";
+            color: var(--accent-color);
+        }
+
+        blockquote::before {
+            content: open-quote;
+            font-size: 2em;
+            line-height: 0;
+        }
+
+        blockquote::after {
+            content: close-quote;
+            font-size: 2em;
+            line-height: 0;
+        }
+
+        /* Список с юникод-маркерами */
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links a::before {
+            content: "➤ ";
+            color: var(--accent-color);
+            margin-right: 8px;
+        }
+
+        /* Стиль выделения текста */
+        ::selection {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        ::-moz-selection {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        /*ТИПОГРАФИКА И ТЕКСТ*/
+        p {
+            margin-bottom: 1rem;
+            text-indent: 1.5em;/* красная строка */
+            line-height: 1.7;/* высота строки (межстрочный интервал) */
+            word-spacing: 0.05em;/* интервал между словами */
+            letter-spacing: 0.02em;/* интервал между символами */
+            text-align: justify;/* выравнивание */
+            word-wrap: break-word;/* перенос слов */
+            hyphens: auto;/* автоматическая расстановка переносов */
+        }
+
+        .logo-text {
+            font-variant: small-caps;/* капитель */
+            font-kerning: normal;/* кернинг */
+        }
+
+        /* === HEADER С ФИКСИРОВАННОЙ НАВИГАЦИЕЙ === */
+        header {
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        /* === КНОПКИ С ИЗМЕНЕНИЕМ КУРСОРА === */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            cursor: pointer;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:hover {
+            cursor: grab;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .logo img {
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .logo-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            white-space: nowrap;
+        }
+
+        /* Навигация */
+        .nav-desktop {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        .nav-icon {
+            font-size: 1rem;
+        }
+
+        .user-menu {
+            display: flex !important;
+            align-items: center;
+            gap: 10px;
+            z-index: 1001;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 0.9rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 10px;
+            min-width: 180px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            margin-top: 10px;
+        }
+
+        .user-avatar:hover .user-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-dropdown a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .user-dropdown a:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #1e3d6f;
+            color: white;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .cart-count {
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            position: absolute;
+            top: -5px;
+            right: -5px;
+        }
+
+        /* Мобильная навигация */
+        .mobile-menu-toggle {
+            display: none;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 30px;
+            height: 25px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .mobile-menu-toggle span {
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary-color);
+            border-radius: 5px;
+            transition: var(--transition);
+        }
+
+        .nav-mobile {
+            display: none;
+            position: fixed;
+            top: 70px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: white;
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 999;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-mobile.active {
+            transform: translateX(0);
+        }
+
+        .mobile-nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .mobile-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            border-radius: 5px;
+            font-weight: 500;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        /* Основное содержимое */
+        main {
+            flex: 1;
+            padding: 90px 0 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        /* Уведомления */
+        .messages {
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        /* Футер */
+        footer {
+            background-color: #477ed1;
+            color: white;
+            padding: 40px 0 20px;
+            margin-top: auto;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .footer-section p{
+            color: #d7e7ff;
+        }
+        .footer-section h3 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .social-links {
+            display: flex !important;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .social-link {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+
+        .social-link:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            margin-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        .footer-bottom p{
+            color: #9ec2f9;
+        }
+
+
+        /* === МЕДИА-ЗАПРОСЫ ДЛЯ ШИРИНЫ И ВЫСОТЫ === */
+        @media (max-height: 600px) and (orientation: landscape) {
+            .header-container {
+                height: 50px;
+            }
+
+            .logo img {
+                height: 30px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 70%);
+            }
+        }
+
+        /* Адаптивность */
+        @media (max-width: 1200px) {
+            .nav-menu {
+                gap: 8px;
+            }
+
+            .nav-link {
+                padding: 6px 10px;
+                font-size: 0.85rem;
+            }
+
+            .logo-text {
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .nav-desktop {
+                display: none;
+            }
+
+            .mobile-menu-toggle {
+                display: flex;
+            }
+
+            .nav-mobile {
+                display: block;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-container {
+                height: 60px;
+            }
+
+            .logo img {
+                height: 35px;
+            }
+
+            .logo-text {
+                font-size: 1rem;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo-text {
+                display: none;
+            }
+        }
+
+        /* Специальные классы для активной ссылки */
+        .active-link {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+        }
+
+        /* Дополнительные стили для компактного меню */
+        .more-menu {
+            position: relative;
+        }
+
+        .more-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 10px;
+            min-width: 180px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            margin-top: 5px;
+        }
+
+        .more-menu:hover .more-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .more-dropdown::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: 0;
+            right: 0;
+            height: 10px;
+        }
+
+        .more-dropdown a {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .more-dropdown a:hover {
+            background-color: var(--secondary-color);
+        }
+
+        /* Стили для переключателя темы */
+.theme-switcher {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 15px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: var(--primary-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.slider.round {
+    border-radius: 24px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* Темная тема */
+[data-theme="dark"] {
+    --primary-color: #1e3d6f;
+    --secondary-color: #2d2d2d;
+    --accent-color: #4CAF50;
+    --text-color: #f0f0f0;
+    --light-text: #b0b0b0;
+    --border-color: #444;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] body {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] header {
+    background-color: rgba(45, 45, 45, 0.95);
+}
+
+[data-theme="dark"] footer {
+    background-color: #2d2d2d;
+}
+
+[data-theme="dark"] .nav-link {
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .nav-link:hover {
+    color: var(--primary-color);
+}
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-container">
+            <a href="{% url 'delivery_app:home' %}" class="logo">
+                <img src="{% static 'delivery_app/images/logo.png' %}" alt="Логотип доставки продуктов">
+                <span class="logo-text">Продуктовая доставка</span>
+            </a>
+
+            <nav class="nav-desktop">
+                <ul class="nav-menu">
+                    <li><a href="{% url 'delivery_app:home' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                            <span class="nav-icon">🏠</span> Главная
+                        </a></li>
+                    <li><a href="{% url 'delivery_app:about' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}">
+                            <span class="nav-icon">ℹ️</span> О компании
+                        </a></li>
+                    <li><a href="{% url 'delivery_app:product_list' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'product_list' %}active{% endif %}">
+                            <span class="nav-icon">📦</span> Товары
+                        </a></li>
+                    <li><a href="{% url 'delivery_app:news' %}"
+                            class="nav-link {% if request.resolver_match.url_name == 'news' %}active{% endif %}">
+                            <span class="nav-icon">📰</span> Новости
+                        </a></li>
+
+                    <!-- Дополнительные пункты меню в выпадающем списке -->
+                    <li class="more-menu">
+                        <a href="#" class="nav-link">
+                            <span class="nav-icon">⋯</span> Еще
+                        </a>
+                        <div class="more-dropdown">
+                            <a href="{% url 'delivery_app:promocodes' %}">
+                                <span>🏷️</span> Промокоды
+                            </a>
+                            <a href="{% url 'delivery_app:faq' %}">
+                                <span>❓</span> Словарь терминов
+                            </a>
+                            <a href="{% url 'delivery_app:contacts' %}">
+                                <span>📞</span> Контакты
+                            </a>
+                            <a href="{% url 'delivery_app:privacy_policy' %}">
+                                <span>🛡️</span> Политика конфиденциальности
+                            </a>
+                            <a href="{% url 'delivery_app:vacancies' %}">
+                                <span>💼</span> Вакансии
+                            </a>
+                            <a href="{% url 'delivery_app:reviews' %}">
+                                <span>⭐</span> Отзывы
+                            </a>
+                            <a href="{% url 'delivery_app:employee_management' %}">
+                                <span>💼</span> Управление сотрудниками
+                            </a>
+                            <a href="{% url 'delivery_app:series_expansion' %}">
+                                <span></span> Графики
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+
+                <div class="user-menu">
+                    <a href="{% url 'delivery_app:cart' %}" class="nav-link" title="Корзина"
+                        style="position: relative;">
+                        <span>🛒</span>
+                        {% if user.is_authenticated and user.cart_items.count > 0 %}
+                        <span class="cart-count">{{ user.cart_items.count }}</span>
+                        {% endif %}
+                    </a>
+
+                    {% if user.is_authenticated %}
+                    <div class="user-avatar" title="{{ user.username }}">
+                        {{ user.username|first|upper }}
+                        <div class="user-dropdown">
+                            <a href="{% url 'delivery_app:profile' %}">
+                                <span>👤</span> Профиль
+                            </a>
+                            <a href="{% url 'delivery_app:order_list' %}">
+                                <span>📋</span> Мои заказы
+                            </a>
+                            {% if user.employee_profile or user.is_superuser %}
+                            <a href="{% url 'delivery_app:employee_panel' %}">
+                                <span>⚙️</span> Панель сотрудника
+                            </a>
+                            {% endif %}
+                            <form method="post" action="{% url 'logout' %}" class="logout-form">
+                                {% csrf_token %}
+                                <button type="submit"
+                                    style="background: none; border: none; text-align: left; width: 100%; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 5px; color: var(--text-color);">
+                                    <span>🚪</span> Выйти
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% else %}
+                    <a href="{% url 'delivery_app:login' %}" class="btn btn-outline">Войти</a>
+                    <a href="{% url 'delivery_app:register' %}" class="btn btn-primary">Регистрация</a>
+                    {% endif %}
+                </div>
+                <div class="theme-switcher">
+                    <label class="switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                    <span id="theme-label">Темная тема</span>
+                </div>
+            </nav>
+
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+
+        <nav class="nav-mobile" id="navMobile">
+            <ul class="mobile-nav-menu">
+                <li><a href="{% url 'delivery_app:home' %}" class="mobile-nav-link">
+                        <span>🏠</span> Главная
+                    </a></li>
+                <li><a href="{% url 'delivery_app:about' %}" class="mobile-nav-link">
+                        <span>ℹ️</span> О компании
+                    </a></li>
+                <li><a href="{% url 'delivery_app:product_list' %}" class="mobile-nav-link">
+                        <span>📦</span> Товары
+                    </a></li>
+                <li><a href="{% url 'delivery_app:news' %}" class="mobile-nav-link">
+                        <span>📰</span> Новости
+                    </a></li>
+                <li><a href="{% url 'delivery_app:faq' %}" class="mobile-nav-link">
+                        <span>❓</span> Словарь терминов
+                    </a></li>
+                <li><a href="{% url 'delivery_app:contacts' %}" class="mobile-nav-link">
+                        <span>📞</span> Контакты
+                    </a></li>
+                <li><a href="{% url 'delivery_app:privacy_policy' %}" class="mobile-nav-link">
+                        <span>🛡️</span> Политика конфиденциальности
+                    </a></li>
+                <li><a href="{% url 'delivery_app:vacancies' %}" class="mobile-nav-link">
+                        <span>💼</span> Вакансии
+                    </a></li>
+                <li><a href="{% url 'delivery_app:reviews' %}" class="mobile-nav-link">
+                        <span>⭐</span> Отзывы
+                    </a></li>
+                <li><a href="{% url 'delivery_app:promocodes' %}" class="mobile-nav-link">
+                        <span>🏷️</span> Промокоды
+                    </a></li>
+                <li><a href="{% url 'delivery_app:cart' %}" class="mobile-nav-link">
+                        <span>🛒</span> Корзина
+                        {% if user.is_authenticated and user.cart_items.count > 0 %}
+                        <span class="cart-count">{{ user.cart_items.count }}</span>
+                        {% endif %}
+                    </a></li>
+
+                {% if user.is_authenticated %}
+                <li><a href="{% url 'delivery_app:profile' %}" class="mobile-nav-link">
+                        <span>👤</span> Профиль
+                    </a></li>
+                <li><a href="{% url 'delivery_app:order_list' %}" class="mobile-nav-link">
+                        <span>📋</span> Мои заказы
+                    </a></li>
+                {% if user.employee_profile or user.is_superuser %}
+                <li><a href="{% url 'delivery_app:employee_panel' %}" class="mobile-nav-link">
+                        <span>⚙️</span> Панель сотрудника
+                    </a></li>
+                {% endif %}
+                <li>
+                    <form method="post" action="{% url 'logout' %}" class="logout-form">
+                        {% csrf_token %}
+                        <button type="submit" class="mobile-nav-link"
+                            style="width: 100%; text-align: left; background: none; border: none;">
+                            <span>🚪</span> Выйти
+                        </button>
+                    </form>
+                </li>
+                {% else %}
+                <li><a href="{% url 'delivery_app:login' %}" class="mobile-nav-link">
+                        <span>🔑</span> Войти
+                    </a></li>
+                <li><a href="{% url 'delivery_app:register' %}" class="mobile-nav-link">
+                        <span>📝</span> Регистрация
+                    </a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="container">
+            <!-- Блок для уведомлений -->
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    <span>
+                        {% if message.tags == 'success' %}✅
+                        {% elif message.tags == 'error' %}❌
+                        {% elif message.tags == 'warning' %}⚠️
+                        {% else %}ℹ️{% endif %}
+                    </span>
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Основное содержимое страницы -->
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>О компании</h3>
+                <p>Мы доставляем свежие продукты прямо к вашей двери. Быстро, удобно и надежно.</p>
+                <div class="social-links">
+                    <a href="#" class="social-link"><span>📘</span></a>
+                    <a href="#" class="social-link"><span>📷</span></a>
+                    <a href="#" class="social-link"><span>🐦</span></a>
+                    <a href="#" class="social-link"><span>📺</span></a>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <h3>Полезные ссылки</h3>
+                <div class="footer-links">
+                    <a href="{% url 'delivery_app:about' %}"><i class="fas fa-chevron-right"></i> О компании</a>
+                    <a href="{% url 'delivery_app:news' %}"><i class="fas fa-chevron-right"></i> Новости</a>
+                    <a href="{% url 'delivery_app:vacancies' %}"><i class="fas fa-chevron-right"></i> Вакансии</a>
+                    <a href="{% url 'delivery_app:faq' %}"><i class="fas fa-chevron-right"></i> Словарь терминов</a>
+                    <a href="{% url 'delivery_app:privacy_policy' %}"><i class="fas fa-chevron-right"></i> Политика
+                        конфиденциальности</a>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <h3>Контакты</h3>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <span>📍</span>
+                        <span>г. Минск, ул. Примерная, 15</span>
+                    </div>
+                    <div class="contact-item">
+                        <span>📞</span>
+                        <span>+375 (17) 123-45-67</span>
+                    </div>
+                    <div class="contact-item">
+                        <span>✉️</span>
+                        <span>info@product-delivery.by</span>
+                    </div>
+                    <div class="contact-item">
+                        <span>🕒</span>
+                        <span>Пн-Пт: 8:00-22:00, Сб-Вс: 9:00-20:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <h3>Подписка на новости</h3>
+                <p>Подпишитесь на нашу рассылку, чтобы первыми узнавать об акциях и новинках.</p>
+                <form class="subscribe-form">
+                    <input type="email" placeholder="Ваш email" required>
+                    <button type="submit" class="btn btn-primary">Подписаться</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2023 Продуктовая доставка. Все права защищены.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Мобильное меню
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const navMobile = document.getElementById('navMobile');
+
+        mobileMenuToggle.addEventListener('click', function () {
+            this.classList.toggle('active');
+            navMobile.classList.toggle('active');
+            document.body.classList.toggle('no-scroll');
+        });
+
+        // Закрытие мобильного меню при клике на ссылку
+        const mobileLinks = document.querySelectorAll('.mobile-nav-link');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', function () {
+                mobileMenuToggle.classList.remove('active');
+                navMobile.classList.remove('active');
+                document.body.classList.remove('no-scroll');
+            });
+        });
+
+        // Подсветка активной ссылки
+        const currentUrl = window.location.pathname;
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        navLinks.forEach(link => {
+            if (link.getAttribute('href') === currentUrl) {
+                link.classList.add('active-link');
+            }
+        });
+
+        // Обработка форм
+        const logoutForms = document.querySelectorAll('.logout-form');
+        logoutForms.forEach(form => {
+            form.addEventListener('submit', function (e) {
+                if (!confirm('Вы уверены, что хотите выйти?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // Инициализация инструментов
+        document.addEventListener('DOMContentLoaded', function () {
+            // Здесь можно инициализировать дополнительные скрипты
+            console.log('Сайт загружен!');
+        });
+
+        // Переключатель темы
+document.addEventListener('DOMContentLoaded', function() {
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeLabel = document.getElementById('theme-label');
+
+    // Проверка сохраненной темы
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        themeToggle.checked = true;
+        themeLabel.textContent = 'Светлая тема';
+    }
+
+    // Обработчик переключения темы
+    themeToggle.addEventListener('change', function() {
+        if (themeToggle.checked) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('theme', 'dark');
+            themeLabel.textContent = 'Светлая тема';
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('theme', 'light');
+            themeLabel.textContent = 'Темная тема';
+        }
+    });
+});
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

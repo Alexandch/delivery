@@ -1,0 +1,261 @@
+{% extends "delivery_app/base.html" %}
+{% load static %}
+
+{% block title %}Политика конфиденциальности - Доставка продуктов{% endblock %}
+
+{% block content %}
+<div class="privacy-simple">
+    <!-- Простой заголовок -->
+    <div class="simple-header">
+        <h1>Политика конфиденциальности</h1>
+        <div class="header-info">
+            <span>Актуально на: {{ current_date }}</span>
+        </div>
+    </div>
+
+    <!-- Основное содержание -->
+    <div class="simple-content">
+        <div class="intro-box">
+            <p><strong>Ваша конфиденциальность важна для нас.</strong> В этой политике объясняется, как мы собираем, используем и защищаем ваши данные.</p>
+        </div>
+
+        <!-- Разделы политики -->
+        <div class="sections-list">
+            {% for section in sections %}
+            <div class="section-item">
+                <div class="section-heading">
+                    <span class="section-num">{{ forloop.counter }}</span>
+                    <h3>{{ section.title }}</h3>
+                </div>
+                <div class="section-text">
+                    {{ section.content|linebreaks }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Контакты -->
+        <div class="contacts-box">
+            <h4>По вопросам конфиденциальности:</h4>
+            <div class="contact-links">
+                <a href="mailto:privacy@product-delivery.by">✉️ privacy@product-delivery.by</a>
+                <a href="tel:+375171234567">📞 +375 (17) 123-45-67</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.privacy-simple * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+.privacy-simple {
+    max-width: 900px;
+    margin: 80px auto 40px;
+    padding: 0 20px;
+    font-family: 'Inter', Arial, sans-serif;
+    line-height: 1.5;
+}
+
+/* Заголовок */
+.simple-header {
+    background: #84b5ff;
+    color: white;
+    padding: 25px 30px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.simple-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.header-info {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+/* Основной контент */
+.simple-content {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 30px;
+}
+
+/* Введение */
+.intro-box {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 6px;
+    border-left: 4px solid #2c5aa0;
+    margin-bottom: 30px;
+}
+
+.intro-box p {
+    margin: 0;
+    color: #333;
+}
+
+/* Список разделов */
+.sections-list {
+    margin-bottom: 30px;
+}
+
+.section-item {
+    margin-bottom: 25px;
+    padding-bottom: 25px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.section-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.section-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.section-num {
+    background: #2c5aa0;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.section-heading h3 {
+    color: #2c5aa0;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    flex: 1;
+}
+
+.section-text {
+    color: #333;
+    margin-left: 45px;
+}
+
+.section-text p {
+    margin-bottom: 12px;
+    text-align: left;
+}
+
+.section-text ul, 
+.section-text ol {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.section-text li {
+    margin-bottom: 5px;
+}
+
+/* Контакты */
+.contacts-box {
+    background: #f0f8ff;
+    padding: 20px;
+    border-radius: 6px;
+    border: 1px solid #d1e7ff;
+    margin-top: 30px;
+}
+
+.contacts-box h4 {
+    color: #2c5aa0;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+.contact-links {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.contact-links a {
+    color: #2c5aa0;
+    text-decoration: none;
+    padding: 8px 12px;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+    transition: all 0.2s ease;
+}
+
+.contact-links a:hover {
+    background: #2c5aa0;
+    color: white;
+    border-color: #2c5aa0;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .privacy-simple {
+        margin: 70px auto 30px;
+        padding: 0 15px;
+    }
+    
+    .simple-header {
+        padding: 20px;
+    }
+    
+    .simple-header h1 {
+        font-size: 20px;
+    }
+    
+    .simple-content {
+        padding: 20px;
+    }
+    
+    .section-heading {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .section-text {
+        margin-left: 0;
+    }
+    
+    .contact-links a {
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .simple-header {
+        padding: 15px;
+    }
+    
+    .simple-content {
+        padding: 15px;
+    }
+    
+    .intro-box {
+        padding: 15px;
+    }
+    
+    .contacts-box {
+        padding: 15px;
+    }
+}
+</style>
+{% endblock %}

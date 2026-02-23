@@ -1,0 +1,2004 @@
+{% extends "delivery_app/base.html" %}
+{% load static %}
+
+{% block title %}Управление сотрудниками - Доставка продуктов{% endblock %}
+
+{% block content %}
+<div class="employee-management">
+    <!-- Заголовок -->
+    <div class="management-header">
+        <h1>Управление сотрудниками</h1>
+        <div class="header-info">
+            <span>Актуально на: {{ current_date }}</span>
+        </div>
+    </div>
+
+    <!-- Прелоадер -->
+    <div id="preloader" class="preloader" style="display: none;">
+        <div class="preloader-content">
+            <div class="spinner"></div>
+            <p>Загрузка...</p>
+        </div>
+    </div>
+
+    <!-- Панель управления -->
+    <div class="management-panel">
+        <button id="add-employee-btn" class="btn btn-primary">
+            <span>+ Добавить сотрудника</span>
+        </button>
+
+        <button id="premiace-btn" class="btn btn-success" disabled>
+            <span>🎉 Премировать выбранных</span>
+        </button>
+
+        <button id="load-server-btn" class="btn btn-info" style="display: none;">
+            <span>🔄 Загрузить с сервера</span>
+        </button>
+
+        <div class="filter-section">
+            <input type="text" id="filter-input" placeholder="Введите текст для поиска...">
+            <button id="filter-btn" class="btn btn-secondary">Найти</button>
+            <button id="reset-filter-btn" class="btn btn-outline">Сбросить</button>
+        </div>
+    </div>
+
+    <!-- Форма добавления сотрудника -->
+    <div id="add-form-container" class="add-form-container" style="display: none;">
+        <form id="add-employee-form" class="add-form">
+            <h3>Добавить нового сотрудника</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="new-lastname">Фамилия *</label>
+                    <input type="text" id="new-lastname" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="new-firstname">Имя *</label>
+                    <input type="text" id="new-firstname" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="new-middlename">Отчество</label>
+                    <input type="text" id="new-middlename">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="new-position">Должность *</label>
+                    <input type="text" id="new-position" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="new-phone">Телефон *</label>
+                    <input type="text" id="new-phone" required>
+                    <div id="phone-validation" class="validation-message"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="new-email">Email *</label>
+                    <input type="email" id="new-email" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="new-photo">URL фото</label>
+                <input type="text" id="new-photo">
+                <div id="url-validation" class="validation-message"></div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" id="cancel-add-btn" class="btn btn-outline">Отмена</button>
+                <button type="submit" id="submit-add-btn" class="btn btn-primary" disabled>Добавить в таблицу</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Таблица сотрудников -->
+    <div class="table-container">
+        <form id="employees-form" method="get">
+            <!-- Скрытые поля для сохранения состояния -->
+            <input type="hidden" name="selected_employees" id="selected-employees-input"
+                value="{{ selected_employees|join:',' }}">
+
+            <table id="employees-table" class="employees-table">
+                <thead>
+                    <tr>
+                        <th width="40">
+                            <input type="checkbox" id="select-all">
+                        </th>
+                        <th>ФИО</th>
+                        <th>Фото</th>
+                        <th>Описание работ</th>
+                        <th>Телефон</th>
+                        <th>Почта</th>
+                    </tr>
+                </thead>
+                <tbody id="employees-tbody">
+                    {% for employee in page_obj %}
+                    <tr data-employee-id="{{ employee.id }}">
+                        <td>
+                            <input type="checkbox" class="employee-checkbox" name="selected_employees"
+                                value="{{ employee.id }}" {% if employee.id in selected_employees %}checked{% endif %}>
+                        </td>
+                        <td>{{ employee.get_full_name }}</td>
+                        <td>
+                            {% if employee.photo %}
+                            <img src="{{ employee.photo.url }}" alt="{{ employee.get_full_name }}"
+                                class="employee-photo-table">
+                            {% else %}
+                            <div class="photo-placeholder">📷</div>
+                            {% endif %}
+                        </td>
+                        <td>{{ employee.position }}</td>
+                        <td>{{ employee.phone }}</td>
+                        <td>{{ employee.email }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: #666;">
+                            Сотрудники не найдены
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Пагинация -->
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                <button type="submit" name="page" value="{{ page_obj.previous_page_number }}"
+                    class="pagination-btn">‹</button>
+                {% else %}
+                <button type="button" class="pagination-btn" disabled>‹</button>
+                {% endif %}
+
+                <span class="page-info">
+                    Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                <button type="submit" name="page" value="{{ page_obj.next_page_number }}"
+                    class="pagination-btn">›</button>
+                {% else %}
+                <button type="button" class="pagination-btn" disabled>›</button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Блок деталей сотрудника -->
+    <div id="employee-details" class="employee-details" style="display: none;">
+        <h3>Детальная информация</h3>
+        <div id="details-content"></div>
+    </div>
+
+    <!-- Блок премирования -->
+    <div id="premiace-results" class="premiate-results" style="display: none;">
+        <h3>Результат премирования</h3>
+        <div id="premiace-content"></div>
+    </div>
+
+    <!-- Секция генерации чекбоксов -->
+    <div class="checkbox-generator-section">
+        <h3>Генератор настраиваемых чекбоксов</h3>
+
+        <!-- Флажок для показа/скрытия формы генерации -->
+        <div class="generator-toggle">
+            <label class="toggle-label">
+                <input type="checkbox" id="toggle-checkbox-generator">
+                <span class="toggle-slider"></span>
+                <span class="toggle-text">Показать генератор чекбоксов</span>
+            </label>
+        </div>
+
+        <!-- Форма для настройки атрибутов чекбокса -->
+        <div id="checkbox-generator-form" class="generator-form" style="display: none;">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="checkbox-name">Name:</label>
+                    <input type="text" id="checkbox-name" placeholder="Имя чекбокса">
+                </div>
+                <div class="form-group">
+                    <label for="checkbox-value">Value:</label>
+                    <input type="text" id="checkbox-value" placeholder="Значение">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group checkbox-option">
+                    <label>
+                        <input type="checkbox" id="checkbox-checked">
+                        Checked
+                    </label>
+                </div>
+                <div class="form-group checkbox-option">
+                    <label>
+                        <input type="checkbox" id="checkbox-required">
+                        Required
+                    </label>
+                </div>
+                <div class="form-group checkbox-option">
+                    <label>
+                        <input type="checkbox" id="checkbox-disabled">
+                        Disabled
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" id="generate-checkbox-btn" class="btn btn-primary">
+                    Сгенерировать чекбокс
+                </button>
+                <button type="button" id="clear-checkboxes-btn" class="btn btn-outline">
+                    Очистить все
+                </button>
+            </div>
+        </div>
+
+        <!-- Контейнер для сгенерированных чекбоксов -->
+        <div id="generated-checkboxes-container" class="checkboxes-container"></div>
+    </div>
+</div>
+<style>
+    .employee-management * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    .employee-management {
+        max-width: 1400px;
+        margin: 80px auto 40px;
+        padding: 0 20px;
+        font-family: 'Inter', Arial, sans-serif;
+        line-height: 1.5;
+    }
+
+    .management-header {
+        background: #9dc4ff;
+        color: white;
+        padding: 25px 30px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .management-header h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+
+    .header-info {
+        font-size: 14px;
+        opacity: 0.9;
+    }
+
+    .preloader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .preloader-content {
+        text-align: center;
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #2c5aa0;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 15px;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .management-panel {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .btn-primary {
+        background: #2c5aa0;
+        color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        background: #1e3d6f;
+    }
+
+    .btn-success {
+        background: #28a745;
+        color: white;
+    }
+
+    .btn-success:hover:not(:disabled) {
+        background: #1e7e34;
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+        background: #545b62;
+    }
+
+    .btn-outline {
+        background: transparent;
+        border: 1px solid #6c757d;
+        color: #6c757d;
+    }
+
+    .btn-outline:hover:not(:disabled) {
+        background: #6c757d;
+        color: white;
+    }
+
+    .filter-section {
+        display: flex;
+        gap: 10px;
+        margin-left: auto;
+    }
+
+    #filter-input {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        min-width: 250px;
+    }
+
+    .add-form-container {
+        background: #f8f9fa;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 25px;
+        margin-bottom: 20px;
+    }
+
+    .add-form h3 {
+        margin-bottom: 20px;
+        color: #2c5aa0;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .form-row .form-group {
+        flex: 1;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        color: #333;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #2c5aa0;
+    }
+
+    .form-group input.invalid {
+        border-color: #dc3545;
+        background-color: #fff5f5;
+    }
+
+    .validation-message {
+        font-size: 12px;
+        margin-top: 5px;
+        min-height: 18px;
+    }
+
+    .validation-message.error {
+        color: #dc3545;
+    }
+
+    .validation-message.success {
+        color: #28a745;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+
+    .table-container {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .employees-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .employees-table th {
+        background: #f8f9fa;
+        padding: 15px 10px;
+        text-align: left;
+        font-weight: 600;
+        color: #333;
+        border-bottom: 1px solid #e0e0e0;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .employees-table th.sortable:hover {
+        background: #e9ecef;
+    }
+
+    .employees-table td {
+        padding: 12px 10px;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: top;
+    }
+
+    .employees-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    .employees-table tbody tr.selected {
+        background: #e3f2fd;
+    }
+
+    .employees-table input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+    }
+
+    .employee-photo-table {
+        width: 50px;
+        height: 50px;
+        border-radius: 4px;
+        object-fit: cover;
+    }
+
+    .photo-placeholder {
+        width: 50px;
+        height: 50px;
+        background: #f0f0f0;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+    }
+
+    .sort-indicator {
+        margin-left: 5px;
+        font-size: 12px;
+    }
+
+    .sort-indicator.asc::after {
+        content: "↑";
+    }
+
+    .sort-indicator.desc::after {
+        content: "↓";
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 15px;
+        padding: 20px;
+        background: #f8f9fa;
+    }
+
+    .pagination-btn {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .pagination-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+        background: #e9ecef;
+    }
+
+    .page-info {
+        font-size: 14px;
+        color: #666;
+    }
+
+    .employee-details,
+    .premiate-results {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 25px;
+        margin-top: 20px;
+    }
+
+    .employee-details h3,
+    .premiate-results h3 {
+        margin-bottom: 15px;
+        color: #2c5aa0;
+    }
+
+    .detail-item {
+        margin-bottom: 10px;
+        display: flex;
+    }
+
+    .detail-label {
+        font-weight: 500;
+        min-width: 120px;
+        color: #666;
+    }
+
+    .detail-value {
+        flex: 1;
+    }
+
+    .premiate-content {
+        background: #f8fff9;
+        border: 1px solid #28a745;
+        border-radius: 6px;
+        padding: 15px;
+        color: #155724;
+    }
+
+    /* Стили для генератора чекбоксов */
+    .checkbox-generator-section {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 25px;
+        margin-top: 30px;
+    }
+
+    .checkbox-generator-section h3 {
+        color: #2c5aa0;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .generator-toggle {
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .toggle-label {
+        display: inline-flex;
+        align-items: center;
+        cursor: pointer;
+        font-weight: 500;
+        color: #333;
+    }
+
+    .toggle-label input[type="checkbox"] {
+        display: none;
+    }
+
+    .toggle-slider {
+        width: 50px;
+        height: 24px;
+        background: #ccc;
+        border-radius: 24px;
+        position: relative;
+        margin-right: 10px;
+        transition: background 0.3s ease;
+    }
+
+    .toggle-slider::before {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: white;
+        border-radius: 50%;
+        top: 2px;
+        left: 2px;
+        transition: transform 0.3s ease;
+    }
+
+    .toggle-label input[type="checkbox"]:checked+.toggle-slider {
+        background: #2c5aa0;
+    }
+
+    .toggle-label input[type="checkbox"]:checked+.toggle-slider::before {
+        transform: translateX(26px);
+    }
+
+    .generator-form {
+        background: #f8f9fa;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .checkbox-option {
+        margin-bottom: 0;
+    }
+
+    .checkbox-option label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        font-weight: normal;
+    }
+
+    .checkbox-option input[type="checkbox"] {
+        width: auto;
+        margin-right: 8px;
+    }
+
+    .checkboxes-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        min-height: 100px;
+    }
+
+    .generated-checkbox-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 15px;
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+
+    .generated-checkbox-item:hover {
+        border-color: #2c5aa0;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .checkbox-with-label {
+        display: flex;
+        align-items: center;
+        flex: 1;
+    }
+
+    .checkbox-with-label input[type="checkbox"] {
+        width: auto;
+        margin-right: 10px;
+    }
+
+    .checkbox-attributes {
+        font-size: 11px;
+        color: #666;
+        margin-left: 10px;
+        opacity: 0.7;
+    }
+
+    .delete-checkbox-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 4px 8px;
+        cursor: pointer;
+        font-size: 12px;
+        margin-left: 10px;
+    }
+
+    .delete-checkbox-btn:hover {
+        background: #c82333;
+    }
+
+    .empty-checkboxes-message {
+        text-align: center;
+        color: #666;
+        font-style: italic;
+        grid-column: 1 / -1;
+        padding: 20px;
+    }
+
+    .employees-table th {
+        position: relative;
+    }
+
+    .employees-table th.sorted-asc::after {
+        content: " ↑";
+        font-size: 12px;
+        color: #2c5aa0;
+    }
+
+    .employees-table th.sorted-desc::after {
+        content: " ↓";
+        font-size: 12px;
+        color: #2c5aa0;
+    }
+
+    .search-results-info {
+        text-align: center;
+        padding: 15px;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+        margin: 10px 0;
+        color: #495057;
+    }
+
+    .search-results-info button {
+        margin-left: 10px;
+    }
+
+    /* Анимация для уведомлений */
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    #search-notification {
+        animation: slideIn 0.3s ease;
+    }
+
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        .checkboxes-container {
+            grid-template-columns: 1fr;
+        }
+
+        .generated-checkbox-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .delete-checkbox-btn {
+            align-self: flex-end;
+            margin-top: 10px;
+            margin-left: 0;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .employee-management {
+            margin: 70px auto 30px;
+            padding: 0 15px;
+        }
+
+        .management-header {
+            padding: 20px;
+        }
+
+        .management-panel {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-section {
+            margin-left: 0;
+            justify-content: stretch;
+        }
+
+        #filter-input {
+            min-width: auto;
+            flex: 1;
+        }
+
+        .form-row {
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .employees-table {
+            font-size: 14px;
+        }
+
+        .employees-table th,
+        .employees-table td {
+            padding: 8px 5px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .employee-management {
+            padding: 0 10px;
+        }
+
+        .management-header {
+            padding: 15px;
+        }
+
+        .add-form-container {
+            padding: 15px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .employees-table {
+            min-width: 800px;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Ключ для localStorage
+        const SELECTED_EMPLOYEES_KEY = 'selectedEmployees';
+        const EMPLOYEES_DATA_KEY = 'employeesData';
+
+        // Основная форма
+        const employeesForm = document.getElementById('employees-form');
+        const selectedEmployeesInput = document.getElementById('selected-employees-input');
+        const selectAllCheckbox = document.getElementById('select-all');
+        const premiaceBtn = document.getElementById('premiace-btn');
+
+        function showPreloader() {
+            const preloader = document.getElementById('preloader');
+            if (preloader) {
+                preloader.style.display = 'flex';
+            }
+        }
+
+        function hidePreloader() {
+            const preloader = document.getElementById('preloader');
+            if (preloader) {
+                preloader.style.display = 'none';
+            }
+        }
+
+        // Загрузка с сервера по кнопке
+        function setupServerLoading() {
+            const loadServerBtn = document.getElementById('load-server-btn');
+            if (loadServerBtn) {
+                loadServerBtn.addEventListener('click', function () {
+                    showPreloader();
+
+                    // Имитация загрузки данных с сервера
+                    setTimeout(() => {
+                        // Моковые данные с сервера с фото
+                        const serverEmployees = [
+                            {
+                                id: 'server_1',
+                                firstName: 'Анна',
+                                lastName: 'Сергеева',
+                                position: 'Старший разработчик',
+                                phone: '+375 (29) 111-22-33',
+                                email: 'anna@company.com',
+                                photo: 'https://via.placeholder.com/150/0088cc/ffffff?text=AS'
+                            },
+                            {
+                                id: 'server_2',
+                                firstName: 'Дмитрий',
+                                lastName: 'Васильев',
+                                position: 'Team Lead',
+                                phone: '8 (029) 222-33-44',
+                                email: 'dmitry@company.com',
+                                photo: 'https://via.placeholder.com/150/00aa88/ffffff?text=DV'
+                            },
+                            {
+                                id: 'server_3',
+                                firstName: 'Екатерина',
+                                lastName: 'Петрова',
+                                position: 'UX/UI дизайнер',
+                                phone: '80293334455',
+                                email: 'ekaterina@company.com',
+                                photo: 'https://via.placeholder.com/150/aa0088/ffffff?text=EP'
+                            }
+                        ];
+
+                        // Получаем текущую страницу и общее количество страниц
+                        const currentPage = parseInt(new URLSearchParams(window.location.search).get('page') || '1');
+                        const totalServerEmployees = serverEmployees.length;
+
+                        // Очищаем таблицу перед добавлением новых данных
+                        const tbody = document.getElementById('employees-tbody');
+                        if (tbody) {
+                            // Сохраняем существующие данные из Django
+                            const existingRows = Array.from(tbody.querySelectorAll('tr[data-employee-id]'));
+
+                            // Очищаем таблицу
+                            tbody.innerHTML = '';
+
+                            // Добавляем обратно существующие данные
+                            existingRows.forEach(row => {
+                                tbody.appendChild(row);
+                            });
+
+                            // Добавляем сотрудников с сервера только на текущую страницу
+                            serverEmployees.forEach(employee => {
+                                const row = document.createElement('tr');
+                                row.setAttribute('data-employee-id', employee.id);
+
+                                row.innerHTML = `
+                            <td>
+                                <input type="checkbox" class="employee-checkbox" name="selected_employees" value="${employee.id}">
+                            </td>
+                            <td>${employee.firstName} ${employee.lastName}</td>
+                            <td>
+                                <img src="${employee.photo}" alt="${employee.firstName} ${employee.lastName}" class="employee-photo-table">
+                            </td>
+                            <td>${employee.position}</td>
+                            <td>${employee.phone}</td>
+                            <td>${employee.email}</td>
+                        `;
+
+                                tbody.appendChild(row);
+                            });
+
+                            // Обновляем информацию о пагинации
+                            updatePaginationInfo(totalServerEmployees);
+                        }
+
+                        hidePreloader();
+                        alert('Данные успешно загружены с сервера и добавлены на текущую страницу!');
+
+                    }, 1500);
+                });
+            }
+        }
+
+        // Фильтрация
+        function setupFilter() {
+            const filterInput = document.getElementById('filter-input');
+            const filterBtn = document.getElementById('filter-btn');
+
+            if (filterBtn && filterInput) {
+                filterBtn.addEventListener('click', function () {
+                    applyFilter();
+                });
+
+                // Также добавляем фильтрацию по нажатию Enter
+                filterInput.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        applyFilter();
+                    }
+                });
+            }
+        }
+
+        // Серверный поиск сотрудников
+        function setupSearch() {
+            const filterInput = document.getElementById('filter-input');
+            const filterBtn = document.getElementById('filter-btn');
+            const resetFilterBtn = document.getElementById('reset-filter-btn');
+
+            if (filterBtn && filterInput) {
+                filterBtn.addEventListener('click', performServerSearch);
+
+                filterInput.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        performServerSearch();
+                    }
+                });
+
+                // Поиск при вводе с задержкой
+                let searchTimeout;
+                filterInput.addEventListener('input', function () {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        if (filterInput.value.trim().length >= 2 || filterInput.value.trim() === '') {
+                            performServerSearch();
+                        }
+                    }, 500);
+                });
+            }
+
+            if (resetFilterBtn) {
+                resetFilterBtn.addEventListener('click', function () {
+                    filterInput.value = '';
+                    performServerSearch();
+                });
+            }
+        }
+
+        async function performServerSearch() {
+            const query = document.getElementById('filter-input').value.trim();
+
+            showPreloader();
+
+            try {
+                const response = await fetch(`/api/search-employees/?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    updateTableWithSearchResults(data);
+                } else {
+                    throw new Error(data.error || 'Ошибка поиска');
+                }
+            } catch (error) {
+                console.error('Ошибка поиска:', error);
+                showSearchNotification('Ошибка при выполнении поиска', 'error');
+                // В случае ошибки показать всех сотрудников
+                document.getElementById('filter-input').value = '';
+                performServerSearch();
+            } finally {
+                hidePreloader();
+            }
+        }
+
+        function updateTableWithSearchResults(data) {
+            const tbody = document.getElementById('employees-tbody');
+            const selectedSet = loadSelectedEmployees();
+            const employees = data.employees || [];
+            const totalCount = data.total_count || 0;
+            const query = data.query || '';
+
+            if (employees.length > 0) {
+                let html = '';
+                employees.forEach(employee => {
+                    const isChecked = selectedSet.has(employee.id.toString());
+                    html += `
+                <tr data-employee-id="${employee.id}">
+                    <td>
+                        <input type="checkbox" class="employee-checkbox" name="selected_employees" 
+                               value="${employee.id}" ${isChecked ? 'checked' : ''}>
+                    </td>
+                    <td>${employee.fio}</td>
+                    <td>
+                        ${employee.photo ?
+                            `<img src="${employee.photo}" alt="${employee.fio}" class="employee-photo-table">` :
+                            `<div class="photo-placeholder">📷</div>`
+                        }
+                    </td>
+                    <td>${employee.description}</td>
+                    <td>${employee.phone}</td>
+                    <td>${employee.email}</td>
+                </tr>
+            `;
+                });
+                tbody.innerHTML = html;
+
+                // Обнов информацию о пагинации
+                updatePaginationForSearch(totalCount, query);
+
+                showSearchNotification(`Найдено сотрудников: ${totalCount}${query ? ` по запросу "${query}"` : ''}`, 'success');
+            } else {
+                tbody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 40px; color: #666;">
+                    ${query ? `Сотрудники по запросу "${query}" не найдены` : 'Сотрудники не найдены'}
+                </td>
+            </tr>
+        `;
+
+                // Скрыть пагинацию при отсутствии результатов
+                updatePaginationForSearch(0, query);
+                showSearchNotification(query ? `По запросу "${query}" ничего не найдено` : 'Нет сотрудников для отображения', 'warning');
+            }
+
+            // Обновить состояние "Выбрать все"
+            updateSelectAllState();
+            updatePremiateButton(selectedSet);
+        }
+
+        function updatePaginationForSearch(totalCount, query) {
+            const pagination = document.querySelector('.pagination');
+            if (pagination) {
+                if (query) {
+                    // При активном поиске скрыть стандартную пагинацию
+                    pagination.style.display = 'none';
+
+                    // Показать информацию о результатах поиска
+                    let searchInfo = document.getElementById('search-results-info');
+                    if (!searchInfo) {
+                        searchInfo = document.createElement('div');
+                        searchInfo.id = 'search-results-info';
+                        searchInfo.className = 'search-results-info';
+                        searchInfo.style.cssText = `
+                    text-align: center;
+                    padding: 15px;
+                    background: #f8f9fa;
+                    border: 1px solid #e9ecef;
+                    border-radius: 4px;
+                    margin: 10px 0;
+                    color: #495057;
+                `;
+                        pagination.parentNode.insertBefore(searchInfo, pagination);
+                    }
+                    searchInfo.innerHTML = `
+                <strong>Результаты поиска:</strong> 
+                Найдено ${totalCount} сотрудников по запросу "${query}"
+                <button id="clear-search-btn" class="btn btn-sm btn-outline-secondary" style="margin-left: 10px;">
+                    Показать всех
+                </button>
+            `;
+
+                    // обработчик для кнопки "Показать всех"
+                    document.getElementById('clear-search-btn').addEventListener('click', function () {
+                        document.getElementById('filter-input').value = '';
+                        performServerSearch();
+                    });
+                } else {
+                    // При отсутствии поиска показ стандартной пагинации
+                    pagination.style.display = '';
+
+                    // Убирать информацию о результатах поиска
+                    const searchInfo = document.getElementById('search-results-info');
+                    if (searchInfo) {
+                        searchInfo.remove();
+                    }
+                }
+            }
+        }
+
+        function showSearchNotification(message, type = 'info') {
+            // Создание или обновление уведомление
+            let notification = document.getElementById('search-notification');
+            if (!notification) {
+                notification = document.createElement('div');
+                notification.id = 'search-notification';
+                notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 4px;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 400px;
+            transition: all 0.3s ease;
+        `;
+                document.body.appendChild(notification);
+            }
+
+            // Установить стили в зависимости от типа
+            const styles = {
+                success: { background: '#4CAF50', color: 'white' },
+                error: { background: '#f44336', color: 'white' },
+                warning: { background: '#ff9800', color: 'white' },
+                info: { background: '#2196F3', color: 'white' }
+            };
+
+            Object.assign(notification.style, styles[type] || styles.info);
+            notification.textContent = message;
+            notification.style.display = 'block';
+
+            // Автоматически скрыть через 4 секунды
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 4000);
+        }
+
+        // Функция для обновления информации о пагинации (если нужно)
+        function updatePaginationInfo(totalEmployees) {
+            // Можно добавить логику для обновления информации о пагинации
+            console.log(`Всего сотрудников: ${totalEmployees}`);
+        }
+
+        // Взаимодействия с таблицей (сортировка и клик по строкам)
+        function setupTableInteractions() {
+            // Сортировка по заголовкам
+            const headers = document.querySelectorAll('#employees-table th');
+            headers.forEach((header, index) => {
+                if (index > 0) { // Пропуск первый столбец с чекбоксами
+                    header.style.cursor = 'pointer';
+                    header.addEventListener('click', function () {
+                        sortTable(index);
+                    });
+                }
+            });
+
+            // Клик по строке для показа деталей
+            document.addEventListener('click', function (e) {
+                const row = e.target.closest('tr[data-employee-id]');
+                if (row && !e.target.matches('.employee-checkbox')) {
+                    showEmployeeDetails(row);
+                }
+            });
+        }
+
+        function sortTable(columnIndex) {
+            const table = document.getElementById('employees-table');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            // Определить текущее направление сортировки
+            const header = table.querySelectorAll('th')[columnIndex];
+            const isAscending = !header.classList.contains('sorted-asc');
+
+            // Сбросить классы сортировки у всех заголовков
+            table.querySelectorAll('th').forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+            });
+
+            // Установить класс для текущего заголовка
+            if (isAscending) {
+                header.classList.add('sorted-asc');
+            } else {
+                header.classList.add('sorted-desc');
+            }
+
+            rows.sort((a, b) => {
+                const aValue = a.cells[columnIndex].textContent.trim();
+                const bValue = b.cells[columnIndex].textContent.trim();
+
+                if (isAscending) {
+                    return aValue.localeCompare(bValue, 'ru');
+                } else {
+                    return bValue.localeCompare(aValue, 'ru');
+                }
+            });
+
+            // Очистить и перезаполнить tbody
+            tbody.innerHTML = '';
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        function showEmployeeDetails(row) {
+            const employeeId = row.getAttribute('data-employee-id');
+            const cells = row.querySelectorAll('td');
+
+            const detailsContent = `
+                <div class="employee-detail">
+                    <div class="detail-item">
+                        <span class="detail-label">ФИО:</span>
+                        <span class="detail-value">${cells[1].textContent}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Должность:</span>
+                        <span class="detail-value">${cells[3].textContent}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Телефон:</span>
+                        <span class="detail-value">${cells[4].textContent}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Email:</span>
+                        <span class="detail-value">${cells[5].textContent}</span>
+                    </div>
+                </div>
+            `;
+
+            const detailsContainer = document.getElementById('employee-details');
+            const detailsContentDiv = document.getElementById('details-content');
+
+            if (detailsContainer && detailsContentDiv) {
+                detailsContentDiv.innerHTML = detailsContent;
+                detailsContainer.style.display = 'block';
+            }
+        }
+
+        // Загрузить выбранных сотрудников из localStorage
+        function loadSelectedEmployees() {
+            const saved = localStorage.getItem(SELECTED_EMPLOYEES_KEY);
+            if (saved) {
+                try {
+                    const selectedIds = JSON.parse(saved);
+                    console.log('Загружены выбранные сотрудники из localStorage:', selectedIds);
+                    return new Set(selectedIds);
+                } catch (e) {
+                    console.error('Ошибка загрузки выбранных сотрудников:', e);
+                }
+            }
+            return new Set();
+        }
+
+        // Загрузить данные о сотрудниках из localStorage
+        function loadEmployeesData() {
+            const saved = localStorage.getItem(EMPLOYEES_DATA_KEY);
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    console.log('Загружены данные о сотрудниках из localStorage:', data);
+                    return data;
+                } catch (e) {
+                    console.error('Ошибка загрузки данных о сотрудниках:', e);
+                }
+            }
+            return {};
+        }
+
+        // Сохранить выбранных сотрудников в localStorage
+        function saveSelectedEmployees(selectedSet) {
+            const selectedIds = Array.from(selectedSet);
+            localStorage.setItem(SELECTED_EMPLOYEES_KEY, JSON.stringify(selectedIds));
+            console.log('Сохранены выбранные сотрудники в localStorage:', selectedIds);
+        }
+
+        // Сохранить данные о сотрудниках в localStorage
+        function saveEmployeesData(employeesData) {
+            localStorage.setItem(EMPLOYEES_DATA_KEY, JSON.stringify(employeesData));
+        }
+
+        // Обновить данные о сотрудниках на текущей странице
+        function updateEmployeesData(employeesData) {
+            document.querySelectorAll('tr[data-employee-id]').forEach(row => {
+                const employeeId = row.getAttribute('data-employee-id');
+                const cells = row.querySelectorAll('td');
+                if (cells.length > 1) {
+                    const name = cells[1].textContent.trim();
+                    employeesData[employeeId] = name;
+                }
+            });
+            saveEmployeesData(employeesData);
+            console.log('Обновлены данные сотрудников:', employeesData);
+            return employeesData;
+        }
+
+        // Обновить состояние чекбоксов на странице
+        function updateCheckboxesState(selectedSet, employeesData) {
+            document.querySelectorAll('.employee-checkbox').forEach(checkbox => {
+                const employeeId = checkbox.value;
+                checkbox.checked = selectedSet.has(employeeId);
+            });
+            updateSelectAllState();
+            updatePremiateButton(selectedSet);
+        }
+
+        // Функция для обновления состояния кнопки премирования
+        function updatePremiateButton(selectedSet) {
+            const checkedCount = selectedSet.size;
+            if (premiaceBtn) {
+                premiaceBtn.disabled = checkedCount === 0;
+
+                if (checkedCount > 0) {
+                    premiaceBtn.style.opacity = '1';
+                    premiaceBtn.title = `Премировать выбранных (${checkedCount})`;
+                } else {
+                    premiaceBtn.style.opacity = '0.6';
+                    premiaceBtn.title = 'Выберите сотрудников для премирования';
+                }
+            }
+        }
+
+        // Функция для обновления состояния "Выбрать все" на текущей странице
+        function updateSelectAllState() {
+            const checkboxes = document.querySelectorAll('.employee-checkbox');
+            const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+
+            if (selectAllCheckbox && checkboxes.length > 0) {
+                if (checkedCount === checkboxes.length) {
+                    selectAllCheckbox.checked = true;
+                    selectAllCheckbox.indeterminate = false;
+                } else if (checkedCount > 0) {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = true;
+                } else {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = false;
+                }
+            }
+        }
+
+        // Получить имя сотрудника по ID
+        function getEmployeeName(employeeId, employeesData) {
+            return employeesData[employeeId] || 'Неизвестный';
+        }
+
+        // Получить имена всех выбранных сотрудников
+        function getSelectedEmployeeNames(selectedSet, employeesData) {
+            const names = [];
+            selectedSet.forEach(id => {
+                names.push(getEmployeeName(id, employeesData));
+            });
+            return names;
+        }
+
+        // Обработчик для чекбоксов сотрудников
+        function setupCheckboxHandlers(selectedSet, employeesData) {
+            document.addEventListener('change', function (e) {
+                if (e.target.matches('.employee-checkbox')) {
+                    const employeeId = e.target.value;
+
+                    if (e.target.checked) {
+                        selectedSet.add(employeeId);
+                        // Обновить данные о сотруднике
+                        const row = e.target.closest('tr');
+                        if (row) {
+                            const cells = row.querySelectorAll('td');
+                            if (cells.length > 1) {
+                                employeesData[employeeId] = cells[1].textContent.trim();
+                                saveEmployeesData(employeesData);
+                            }
+                        }
+                    } else {
+                        selectedSet.delete(employeeId);
+                    }
+
+                    saveSelectedEmployees(selectedSet);
+                    updateSelectAllState();
+                    updatePremiateButton(selectedSet);
+                    console.log('Выбранные сотрудники обновлены:', Array.from(selectedSet));
+                }
+            });
+        }
+
+        // Обработчик для "Выбрать все" на текущей странице
+        function setupSelectAllHandler(selectedSet, employeesData) {
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function () {
+                    const checkboxes = document.querySelectorAll('.employee-checkbox');
+                    const currentPageIds = Array.from(checkboxes).map(cb => cb.value);
+
+                    checkboxes.forEach(cb => {
+                        const employeeId = cb.value;
+                        cb.checked = this.checked;
+
+                        if (this.checked) {
+                            selectedSet.add(employeeId);
+                            // Обновить данные о сотруднике
+                            const row = cb.closest('tr');
+                            if (row) {
+                                const cells = row.querySelectorAll('td');
+                                if (cells.length > 1) {
+                                    employeesData[employeeId] = cells[1].textContent.trim();
+                                }
+                            }
+                        } else {
+                            // Удаление только сотрудников с текущей страницы
+                            if (currentPageIds.includes(employeeId)) {
+                                selectedSet.delete(employeeId);
+                            }
+                        }
+                    });
+
+                    saveSelectedEmployees(selectedSet);
+                    saveEmployeesData(employeesData);
+                    updatePremiateButton(selectedSet);
+                    console.log('Выбрать все:', Array.from(selectedSet));
+                });
+            }
+        }
+
+        // Обработчик для кнопки премирования
+        function setupPremiateHandler(selectedSet, employeesData) {
+            if (premiaceBtn) {
+                premiaceBtn.addEventListener('click', function () {
+                    if (selectedSet.size > 0) {
+                        // Получение имен выбранных сотрудников из данных таблицы
+                        const names = [];
+                        selectedSet.forEach(employeeId => {
+                            // Поиск сотрудника в DOM текущей страницы
+                            const row = document.querySelector(`tr[data-employee-id="${employeeId}"]`);
+                            if (row) {
+                                const cells = row.querySelectorAll('td');
+                                if (cells.length > 1) {
+                                    names.push(cells[1].textContent.trim());
+                                }
+                            } else {
+                                // Если сотрудника нет на текущей странице, используются сохраненные данные
+                                names.push(employeesData[employeeId] || 'Неизвестный');
+                            }
+                        });
+
+                        const premiaceContent = document.getElementById('premiace-content');
+                        const premiaceResults = document.getElementById('premiace-results');
+                        const employeeDetails = document.getElementById('employee-details');
+
+                        premiaceContent.innerHTML = `
+                            <div class="premiate-content">
+                                <p>Поздравляем сотрудников с получением премии!</p>
+                                <p><strong>Премированы:</strong> ${names.join(', ')}</p>
+                                <p>За высокие профессиональные достижения и выдающийся вклад в развитие компании.</p>
+                                <p>Желаем дальнейших успехов в работе!</p>
+                            </div>
+                        `;
+
+                        premiaceResults.style.display = 'block';
+                        if (employeeDetails) {
+                            employeeDetails.style.display = 'none';
+                        }
+
+                        // Сбросить выбор после премирования
+                        selectedSet.clear();
+                        document.querySelectorAll('.employee-checkbox').forEach(cb => {
+                            cb.checked = false;
+                        });
+                        if (selectAllCheckbox) {
+                            selectAllCheckbox.checked = false;
+                            selectAllCheckbox.indeterminate = false;
+                        }
+                        saveSelectedEmployees(selectedSet);
+                        updatePremiateButton(selectedSet);
+                        console.log('Сброшены выбранные сотрудники после премирования');
+                    }
+                });
+            }
+        }
+
+        // Обработчик для отправки формы (при пагинации)
+        function setupFormHandler(selectedSet) {
+            if (employeesForm) {
+                employeesForm.addEventListener('submit', function (e) {
+                    // Сохранить текущее состояние перед отправкой формы
+                    if (selectedEmployeesInput) {
+                        selectedEmployeesInput.value = JSON.stringify(Array.from(selectedSet));
+                    }
+                    saveSelectedEmployees(selectedSet);
+                    console.log('Форма отправляется с выбранными сотрудниками:', Array.from(selectedSet));
+                });
+            }
+        }
+
+        // ========== ФОРМА ДОБАВЛЕНИЯ СОТРУДНИКА ==========
+        function setupAddEmployeeForm() {
+            const addEmployeeBtn = document.getElementById('add-employee-btn');
+            const addFormContainer = document.getElementById('add-form-container');
+            const cancelAddBtn = document.getElementById('cancel-add-btn');
+            const addForm = document.getElementById('add-employee-form');
+
+            if (addEmployeeBtn && addFormContainer) {
+                addEmployeeBtn.addEventListener('click', function () {
+                    addFormContainer.style.display = addFormContainer.style.display === 'none' ? 'block' : 'none';
+                });
+            }
+
+            if (cancelAddBtn && addFormContainer) {
+                cancelAddBtn.addEventListener('click', function () {
+                    addFormContainer.style.display = 'none';
+                    if (addForm) {
+                        addForm.reset();
+                    }
+                    resetValidation();
+                });
+            }
+
+            // Функции валидации
+            const validators = {
+                url: function (url) {
+                    if (!url) return { isValid: true, message: '' };
+
+                    const pattern = /^(http:\/\/|https:\/\/).*\.(php|html)$/;
+                    const isValid = pattern.test(url);
+
+                    return {
+                        isValid,
+                        message: isValid ? 'URL валиден' : 'URL должен начинаться с http:// или https:// и заканчиваться на .php или .html'
+                    };
+                },
+
+                phone: function (phone) {
+                    if (!phone) return { isValid: false, message: 'Телефон обязателен' };
+
+                    // валидация телефона
+                    const patterns = [
+                        /^\+375\s?\(\d{2}\)\s?\d{3}-\d{2}-\d{2}$/, // +375 (29) XXX-XX-XX
+                        /^\+375\d{9}$/, // +375XXXXXXXXX
+                        /^8\s?\(\d{3}\)\s?\d{3}-\d{2}-\d{2}$/, // 8 (XXX) XXX-XX-XX
+                    ];
+
+                    const isValid = patterns.some(pattern => pattern.test(phone));
+
+                    return {
+                        isValid,
+                        message: isValid ? 'Телефон валиден' : 'Телефон должен быть в формате: +375 (29) XXX-XX-XX'
+                    };
+                },
+
+                email: function (email) {
+                    if (!email) return { isValid: false, message: 'Email обязателен' };
+
+                    const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    const isValid = pattern.test(email);
+
+                    return {
+                        isValid,
+                        message: isValid ? 'Email валиден' : 'Введите корректный email адрес'
+                    };
+                }
+            };
+
+            function validateForm() {
+                const url = document.getElementById('new-photo').value;
+                const phone = document.getElementById('new-phone').value;
+                const firstName = document.getElementById('new-firstname').value;
+                const lastName = document.getElementById('new-lastname').value;
+                const position = document.getElementById('new-position').value;
+                const email = document.getElementById('new-email').value;
+
+                const urlValidation = validators.url(url);
+                const phoneValidation = validators.phone(phone);
+                const emailValidation = validators.email(email);
+
+                updateValidation('url', urlValidation);
+                updateValidation('phone', phoneValidation);
+                updateValidation('email', emailValidation);
+
+                const allFieldsFilled = firstName && lastName && position && phone && email;
+                const allValid = urlValidation.isValid && phoneValidation.isValid && emailValidation.isValid && allFieldsFilled;
+
+                const submitBtn = document.getElementById('submit-add-btn');
+                if (submitBtn) {
+                    submitBtn.disabled = !allValid;
+                }
+
+                return allValid;
+            }
+
+            function updateValidation(field, validation) {
+                const input = document.getElementById(`new-${field}`);
+                const messageElement = document.getElementById(`${field}-validation`);
+
+                if (input && messageElement) {
+                    if (validation.message) {
+                        messageElement.textContent = validation.message;
+                        messageElement.className = `validation-message ${validation.isValid ? 'success' : 'error'}`;
+
+                        if (validation.isValid) {
+                            input.classList.remove('invalid');
+                        } else {
+                            input.classList.add('invalid');
+                        }
+                    } else {
+                        messageElement.textContent = '';
+                        messageElement.className = 'validation-message';
+                        input.classList.remove('invalid');
+                    }
+                }
+            }
+
+            function resetValidation() {
+                document.querySelectorAll('.validation-message').forEach(el => {
+                    el.textContent = '';
+                    el.className = 'validation-message';
+                });
+
+                document.querySelectorAll('.invalid').forEach(el => {
+                    el.classList.remove('invalid');
+                });
+
+                const submitBtn = document.getElementById('submit-add-btn');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                }
+            }
+
+            // Валидация в реальном времени
+            const photoInput = document.getElementById('new-photo');
+            if (photoInput) {
+                photoInput.addEventListener('input', validateForm);
+            }
+
+            const phoneInput = document.getElementById('new-phone');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', validateForm);
+            }
+
+            const emailInput = document.getElementById('new-email');
+            if (emailInput) {
+                emailInput.addEventListener('input', validateForm);
+            }
+
+            // Обязательные поля
+            const requiredFields = ['new-firstname', 'new-lastname', 'new-position', 'new-phone', 'new-email'];
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', validateForm);
+                }
+            });
+
+            // Обработчик отправки формы добавления
+            if (addForm) {
+                addForm.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    if (!validateForm()) {
+                        alert('Пожалуйста, исправьте ошибки в форме');
+                        return;
+                    }
+
+                    showPreloader();
+
+                    try {
+                        // Собираются данные формы
+                        const formData = {
+                            first_name: document.getElementById('new-firstname').value.trim(),
+                            last_name: document.getElementById('new-lastname').value.trim(),
+                            middle_name: document.getElementById('new-middlename').value.trim(),
+                            position: document.getElementById('new-position').value.trim(),
+                            phone: document.getElementById('new-phone').value.trim(),
+                            email: document.getElementById('new-email').value.trim(),
+                            photo_url: document.getElementById('new-photo').value.trim()
+                        };
+
+                        // Отправка запроса на сервер
+                        const response = await fetch('/api/add-employee/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCSRFToken()
+                            },
+                            body: JSON.stringify(formData)
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            // Успешно добавлено
+                            alert('Сотрудник успешно добавлен!');
+                            addFormContainer.style.display = 'none';
+                            addForm.reset();
+                            resetValidation();
+
+                            // Перезагрузка страницы для отображения нового сотрудника
+                            window.location.reload();
+                        } else {
+                            // Ошибка при добавлении
+                            alert('Ошибка при добавлении сотрудника: ' + (result.error || 'Неизвестная ошибка'));
+                        }
+                    } catch (error) {
+                        console.error('Ошибка:', error);
+                        alert('Произошла ошибка при отправке данных');
+                    } finally {
+                        hidePreloader();
+                    }
+                });
+            }
+        }
+
+        // Функция для получения CSRF токена
+        function getCSRFToken() {
+            const cookieValue = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+            return cookieValue || '';
+        }
+
+        // ========== ИНИЦИАЛИЗАЦИЯ ==========
+        function init() {
+            console.log('Инициализация управления сотрудниками');
+
+            // Загрузка выбранных сотрудников и данные о них
+            const selectedSet = loadSelectedEmployees();
+            let employeesData = loadEmployeesData();
+
+            // Обнов данные о сотрудниках на текущей странице
+            employeesData = updateEmployeesData(employeesData);
+
+            // Обнов состояние чекбоксов
+            updateCheckboxesState(selectedSet, employeesData);
+
+            // Настр обработчики
+            setupCheckboxHandlers(selectedSet, employeesData);
+            setupSelectAllHandler(selectedSet, employeesData);
+            setupPremiateHandler(selectedSet, employeesData);
+            setupFormHandler(selectedSet);
+            setupAddEmployeeForm();
+
+            setupServerLoading();
+            setupSearch();
+            setupTableInteractions();
+
+            updatePremiateButton(selectedSet);
+
+            // Заполнение скрытое поле формы, если оно есть
+            if (selectedEmployeesInput) {
+                selectedEmployeesInput.value = JSON.stringify(Array.from(selectedSet));
+            }
+        }
+
+        // Запуск инициализации
+        init();
+    });
+
+    // Генератор чекбоксов
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleGenerator = document.getElementById('toggle-checkbox-generator');
+        const generatorForm = document.getElementById('checkbox-generator-form');
+        const generateBtn = document.getElementById('generate-checkbox-btn');
+        const clearBtn = document.getElementById('clear-checkboxes-btn');
+        const checkboxesContainer = document.getElementById('generated-checkboxes-container');
+        const STORAGE_KEY = 'generatedCheckboxes';
+
+        function loadSavedCheckboxes() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const checkboxes = JSON.parse(saved);
+                    checkboxes.forEach(checkbox => renderCheckbox(checkbox, false));
+                    updateEmptyMessage();
+                } catch (e) {
+                    console.error('Ошибка загрузки чекбоксов:', e);
+                }
+            }
+        }
+
+        function saveCheckboxes() {
+            const checkboxes = [];
+            document.querySelectorAll('.generated-checkbox-item').forEach(item => {
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                checkboxes.push({
+                    name: checkbox.name,
+                    value: checkbox.value,
+                    checked: checkbox.checked,
+                    required: checkbox.required,
+                    disabled: checkbox.disabled,
+                    label: item.querySelector('.checkbox-label').textContent
+                });
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(checkboxes));
+        }
+
+        function updateEmptyMessage() {
+            const hasCheckboxes = checkboxesContainer.querySelector('.generated-checkbox-item');
+            if (!hasCheckboxes) {
+                checkboxesContainer.innerHTML = '<div class="empty-checkboxes-message">Нет сгенерированных чекбоксов</div>';
+            }
+        }
+
+        function renderCheckbox(attributes, save = true) {
+            const { name, value, checked, required, disabled, label } = attributes;
+            const checkboxId = `checkbox-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+            const checkboxItem = document.createElement('div');
+            checkboxItem.className = 'generated-checkbox-item';
+            checkboxItem.innerHTML = `
+            <div class="checkbox-with-label">
+                <input type="checkbox" 
+                       id="${checkboxId}"
+                       name="${name || ''}"
+                       value="${value || ''}"
+                       ${checked ? 'checked' : ''}
+                       ${required ? 'required' : ''}
+                       ${disabled ? 'disabled' : ''}>
+                <label for="${checkboxId}" class="checkbox-label">
+                    ${label || (name || 'Чекбокс')}
+                </label>
+                <span class="checkbox-attributes">
+                    ${getAttributesString(attributes)}
+                </span>
+            </div>
+            <button type="button" class="delete-checkbox-btn" title="Удалить">
+                ✕
+            </button>
+        `;
+
+            const deleteBtn = checkboxItem.querySelector('.delete-checkbox-btn');
+            deleteBtn.addEventListener('click', function () {
+                checkboxItem.remove();
+                saveCheckboxes();
+                updateEmptyMessage();
+            });
+
+            const emptyMessage = checkboxesContainer.querySelector('.empty-checkboxes-message');
+            if (emptyMessage) {
+                emptyMessage.remove();
+            }
+
+            checkboxesContainer.appendChild(checkboxItem);
+
+            if (save) {
+                saveCheckboxes();
+            }
+        }
+
+        function getAttributesString(attributes) {
+            const parts = [];
+            if (attributes.checked) parts.push('checked');
+            if (attributes.required) parts.push('required');
+            if (attributes.disabled) parts.push('disabled');
+            return parts.length > 0 ? `[${parts.join(', ')}]` : '';
+        }
+
+        function generateNewCheckbox() {
+            const name = document.getElementById('checkbox-name').value.trim() || `checkbox_${Date.now()}`;
+            const value = document.getElementById('checkbox-value').value.trim() || 'on';
+            const checked = document.getElementById('checkbox-checked').checked;
+            const required = document.getElementById('checkbox-required').checked;
+            const disabled = document.getElementById('checkbox-disabled').checked;
+            const label = name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, ' ');
+
+            const attributes = { name, value, checked, required, disabled, label };
+            renderCheckbox(attributes);
+
+            document.getElementById('checkbox-name').value = '';
+            document.getElementById('checkbox-value').value = '';
+            document.getElementById('checkbox-checked').checked = false;
+            document.getElementById('checkbox-required').checked = false;
+            document.getElementById('checkbox-disabled').checked = false;
+        }
+
+        function clearAllCheckboxes() {
+            if (confirm('Вы уверены, что хотите удалить все сгенерированные чекбоксы?')) {
+                checkboxesContainer.innerHTML = '';
+                localStorage.removeItem(STORAGE_KEY);
+                updateEmptyMessage();
+            }
+        }
+
+        function initCheckboxGenerator() {
+            if (toggleGenerator) {
+                toggleGenerator.addEventListener('change', function () {
+                    if (generatorForm) {
+                        generatorForm.style.display = this.checked ? 'block' : 'none';
+                    }
+                });
+            }
+
+            if (generateBtn) {
+                generateBtn.addEventListener('click', generateNewCheckbox);
+            }
+
+            if (clearBtn) {
+                clearBtn.addEventListener('click', clearAllCheckboxes);
+            }
+
+            loadSavedCheckboxes();
+            updateEmptyMessage();
+        }
+
+        initCheckboxGenerator();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,626 @@
+{% extends "delivery_app/base.html" %}
+
+{% block title %}
+Регистрация
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo">📝</div>
+            <h1>Регистрация</h1>
+            <p>Дата: {{ current_date }} | Временная зона: {{ timezone }}</p>
+        </div>
+
+        <div class="auth-body">
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    <span>
+                        {% if message.tags == 'success' %}✅
+                        {% elif message.tags == 'error' %}❌
+                        {% elif message.tags == 'warning' %}⚠️
+                        {% else %}ℹ️{% endif %}
+                    </span>
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" class="auth-form">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                <div class="alert alert-error">
+                    <span>❌</span>
+                    <div>
+                        <strong>Пожалуйста, исправьте ошибки:</strong>
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <div>{{ field.label }}: {{ error }}</div>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="form-grid">
+                    {% for field in form %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}" class="form-label">
+                            {{ field.label }}
+                            {% if field.field.required %}<span class="required">*</span>{% endif %}
+                        </label>
+                        {{ field }}
+                        {% if field.help_text %}
+                        <div class="form-text">{{ field.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-large btn-block">
+                    <span>📋</span> Зарегистрироваться
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Уже есть аккаунт? <a href="{% url 'login' %}" class="auth-link">Войти</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Календарь в отдельной карточке -->
+    <div class="calendar-card">
+        <div class="card">
+            <div class="card-header">
+                <h3>Календарь на {{ current_date|slice:":7" }}</h3>
+            </div>
+            <div class="card-body">
+                <table class="calendar-table">
+                    <thead>
+                        <tr>
+                            <th>Пн</th>
+                            <th>Вт</th>
+                            <th>Ср</th>
+                            <th>Чт</th>
+                            <th>Пт</th>
+                            <th>Сб</th>
+                            <th>Вс</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for week in calendar %}
+                        <tr>
+                            {% for day in week %}
+                            <td{% if day == 0 %} class="empty"{% endif %}>
+                                {{ day|default:"" }}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Специфичные стили для страницы регистрации */
+.auth-container {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 30px;
+    align-items: start;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.auth-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+
+.auth-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    color: white;
+    text-align: center;
+    padding: 30px;
+}
+
+.auth-header h1 {
+    color: rgb(56, 56, 56);
+    margin-bottom: 10px;
+    font-size: 1.8em;
+}
+
+.auth-header p {
+    color: rgba(61, 61, 61, 0.9);
+    margin-bottom: 0;
+    font-size: 0.9em;
+}
+
+.auth-logo {
+    font-size: 3em;
+    margin-bottom: 15px;
+}
+
+.auth-body {
+    padding: 30px;
+}
+
+.auth-form {
+    margin-bottom: 20px;
+}
+
+.form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.required {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.form-control {
+    padding: 12px 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1em;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
+}
+
+.form-text {
+    font-size: 0.875em;
+    color: var(--text-light);
+    margin-top: 5px;
+}
+
+.btn-block {
+    width: 100%;
+    justify-content: center;
+}
+
+.auth-footer {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.auth-link {
+    color: var(--primary-color);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.auth-link:hover {
+    text-decoration: underline;
+}
+
+/* Стили для календаря */
+.calendar-card {
+    margin-top: 0;
+}
+
+.calendar-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+.calendar-table th {
+    background-color: var(--bg-light);
+    padding: 10px 5px;
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 0.9em;
+}
+
+.calendar-table td {
+    padding: 8px 5px;
+    border: 1px solid var(--border-color);
+    font-size: 0.9em;
+}
+
+.calendar-table td.empty {
+    background-color: var(--bg-light);
+    color: var(--text-light);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .auth-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 15px;
+    }
+    
+    .auth-header {
+        padding: 25px 20px;
+    }
+    
+    .auth-body {
+        padding: 25px 20px;
+    }
+    
+    .auth-header h1 {
+        font-size: 1.6em;
+    }
+    
+    .calendar-card {
+        order: -1;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-container {
+        padding: 10px;
+    }
+    
+    .auth-header {
+        padding: 20px 15px;
+    }
+    
+    .auth-body {
+        padding: 20px 15px;
+    }
+    
+    .form-control {
+        padding: 10px 12px;
+    }
+}
+
+/* Анимации */
+.auth-card {
+    animation: slideInUp 0.6s ease-out;
+}
+
+.calendar-card {
+    animation: slideInUp 0.6s ease-out 0.2s both;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Стили для ошибок полей */
+.form-group .error {
+    color: #dc3545;
+    font-size: 0.875em;
+    margin-top: 5px;
+}
+
+.form-control.error {
+    border-color: #dc3545;
+}
+
+/* Стили для успешной валидации */
+.form-control.valid {
+    border-color: var(--secondary-color);
+}
+
+/* Улучшенные стили для алертов */
+.alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid;
+}
+
+.alert-error {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: #dc3545;
+    color: #721c24;
+}
+
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.1);
+    border-color: var(--secondary-color);
+    color: #155724;
+}
+
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.1);
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.alert-info {
+    background-color: rgba(23, 162, 184, 0.1);
+    border-color: #17a2b8;
+    color: #0c5460;
+}
+/* Стили для поля даты рождения */
+#id_date_of_birth {
+    background-color: white;
+}
+
+/* Анимации для сообщений */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Специфичные стили для сообщения о дате рождения */
+#dob-message {
+    font-size: 0.9em;
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-top: 8px;
+}
+
+/* Подсветка поля даты рождения при ошибке/успехе */
+#id_date_of_birth.error {
+    border-color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.05);
+}
+
+#id_date_of_birth.valid {
+    border-color: #28a745;
+    background-color: rgba(40, 167, 69, 0.05);
+}
+
+/* Адаптивность для поля даты рождения */
+@media (max-width: 480px) {
+    #id_date_of_birth {
+        font-size: 16px; /* Предотвращает зум в iOS */
+    }
+}
+
+/* Улучшенные стили для формы */
+.form-group {
+    position: relative;
+}
+
+.form-group.focused .form-label {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+/* Индикатор загрузки для проверки даты */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Добавляем обработчики для динамической валидации
+    const form = document.querySelector('.auth-form');
+    const inputs = form.querySelectorAll('.form-control');
+    
+    inputs.forEach(input => {
+        // Добавляем классы при фокусе
+        input.addEventListener('focus', function() {
+            this.parentElement.classList.add('focused');
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.classList.remove('focused');
+            // Простая валидация на клиенте
+            if (this.value.trim() !== '') {
+                this.classList.add('valid');
+                this.classList.remove('error');
+            } else if (this.required) {
+                this.classList.add('error');
+                this.classList.remove('valid');
+            }
+        });
+        
+        // Валидация при вводе
+        input.addEventListener('input', function() {
+            if (this.value.trim() !== '') {
+                this.classList.remove('error');
+                this.classList.add('valid');
+            }
+        });
+    });
+    
+    // Валидация формы при отправке
+    form.addEventListener('submit', function(e) {
+        let valid = true;
+        inputs.forEach(input => {
+            if (input.required && input.value.trim() === '') {
+                input.classList.add('error');
+                valid = false;
+            }
+        });
+        
+        if (!valid) {
+            e.preventDefault();
+            // Прокрутка к первой ошибке
+            const firstError = form.querySelector('.error');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstError.focus();
+            }
+        }
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Добавляем обработчики для динамической валидации
+    const form = document.querySelector('.auth-form');
+    const inputs = form.querySelectorAll('.form-control');
+    
+    // Обработчик для поля даты рождения
+    const dobField = document.getElementById('id_date_of_birth');
+    if (dobField) {
+        dobField.addEventListener('change', function() {
+            validateDateOfBirth(this);
+        });
+        
+        dobField.addEventListener('input', function() {
+            validateDateOfBirth(this);
+        });
+    }
+    
+    inputs.forEach(input => {
+        // Добавляем классы при фокусе
+        input.addEventListener('focus', function() {
+            this.parentElement.classList.add('focused');
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.classList.remove('focused');
+            // Простая валидация на клиенте
+            if (this.value.trim() !== '') {
+                this.classList.add('valid');
+                this.classList.remove('error');
+            } else if (this.required) {
+                this.classList.add('error');
+                this.classList.remove('valid');
+            }
+        });
+        
+        // Валидация при вводе
+        input.addEventListener('input', function() {
+            if (this.value.trim() !== '') {
+                this.classList.remove('error');
+                this.classList.add('valid');
+            }
+        });
+    });
+    
+    // Валидация формы при отправке
+    form.addEventListener('submit', function(e) {
+        let valid = true;
+        inputs.forEach(input => {
+            if (input.required && input.value.trim() === '') {
+                input.classList.add('error');
+                valid = false;
+            }
+        });
+        
+        // Дополнительная проверка даты рождения
+        if (dobField && !validateDateOfBirth(dobField, true)) {
+            valid = false;
+        }
+        
+        if (!valid) {
+            e.preventDefault();
+            // Прокрутка к первой ошибке
+            const firstError = form.querySelector('.error');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstError.focus();
+            }
+        }
+    });
+    
+    // Функция валидации даты рождения
+    function validateDateOfBirth(field, showAlert = false) {
+        const value = field.value;
+        const messageContainer = document.getElementById('dob-message') || createDOBMessageContainer(field);
+        
+        if (!value) {
+            messageContainer.style.display = 'none';
+            field.classList.remove('error', 'valid');
+            return true;
+        }
+        
+        const birthDate = new Date(value);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        
+        // Проверка на будущую дату
+        if (birthDate > today) {
+            field.classList.add('error');
+            field.classList.remove('valid');
+            messageContainer.innerHTML = '<span>❌</span> Дата рождения не может быть в будущем.';
+            messageContainer.className = 'alert alert-error';
+            messageContainer.style.display = 'flex';
+            return false;
+        }
+        
+        // Проверка возраста
+        const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+        const dayOfWeek = daysOfWeek[birthDate.getDay()];
+        
+        if (age < 18) {
+            field.classList.add('error');
+            field.classList.remove('valid');
+            messageContainer.innerHTML = `<span>⚠️</span> Вам ${age} лет. Для использования сайта требуется разрешение родителей.`;
+            messageContainer.className = 'alert alert-warning';
+            messageContainer.style.display = 'flex';
+            
+            if (showAlert) {
+                alert(`ВНИМАНИЕ: Вам ${age} лет. Для регистрации на сайте требуется разрешение родителей.`);
+            }
+            return false;
+        } else {
+            field.classList.remove('error');
+            field.classList.add('valid');
+            messageContainer.innerHTML = `<span>✅</span> Вам ${age} лет(год). Вы родились в ${dayOfWeek}.`;
+            messageContainer.className = 'alert alert-success';
+            messageContainer.style.display = 'flex';
+            return true;
+        }
+    }
+    
+    // Создание контейнера для сообщений о дате рождения
+    function createDOBMessageContainer(field) {
+        const container = document.createElement('div');
+        container.id = 'dob-message';
+        container.className = 'alert';
+        container.style.display = 'none';
+        container.style.marginTop = '10px';
+        
+        // Вставляем контейнер после поля даты рождения
+        field.parentNode.insertBefore(container, field.nextSibling);
+        return container;
+    }
+});
+</script>
+{% endblock %}
