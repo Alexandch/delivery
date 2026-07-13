@@ -278,7 +278,7 @@
     font-size: 1.2em;
 }
 
-/* Анимация для поиска */
+
 .highlight {
     background-color: #fff3cd;
     padding: 2px 4px;
@@ -312,13 +312,11 @@
 </style>
 
 <script>
-// Функция для переключения отображения ответа
 function toggleFaq(faqId) {
     const faqItem = document.querySelector(`.faq-item[data-faq-id="${faqId}"]`);
     faqItem.classList.toggle('active');
 }
 
-// Функция для поиска по FAQ
 document.getElementById('faq-search').addEventListener('input', function(e) {
     const searchTerm = e.target.value.toLowerCase();
     const faqItems = document.querySelectorAll('.faq-item');
@@ -330,13 +328,11 @@ document.getElementById('faq-search').addEventListener('input', function(e) {
         if (question.includes(searchTerm) || answer.includes(searchTerm)) {
             item.style.display = 'block';
             
-            // Подсветка найденного текста
             if (searchTerm.length > 2) {
                 const regex = new RegExp(searchTerm, 'gi');
                 const questionElem = item.querySelector('.faq-question h3');
                 const answerElem = item.querySelector('.faq-content');
                 
-                // Сохраняем оригинальный текст
                 if (!questionElem.dataset.original) {
                     questionElem.dataset.original = questionElem.innerHTML;
                 }
@@ -344,7 +340,6 @@ document.getElementById('faq-search').addEventListener('input', function(e) {
                     answerElem.dataset.original = answerElem.innerHTML;
                 }
                 
-                // Подсвечиваем совпадения
                 questionElem.innerHTML = questionElem.dataset.original.replace(
                     regex, 
                     match => `<span class="highlight">${match}</span>`
@@ -361,7 +356,6 @@ document.getElementById('faq-search').addEventListener('input', function(e) {
     });
 });
 
-// Открываем FAQ по якорной ссылке
 document.addEventListener('DOMContentLoaded', function() {
     const hash = window.location.hash;
     if (hash) {
@@ -373,7 +367,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Делаем первый FAQ активным по умолчанию
     const firstFaq = document.querySelector('.faq-item');
     if (firstFaq) {
         firstFaq.classList.add('active');

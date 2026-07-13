@@ -1,196 +1,65 @@
 {% extends "delivery_app/base.html" %}
-
+{% block title %}Панель сотрудника{% endblock %}
 {% block content %}
-<h2>Панель сотрудника</h2>
-<p>Дата: {{ current_date }} | Временная зона: {{ timezone }}</p>
+<section class="admin-page">
+  <header class="admin-heading">
+    <div><span class="admin-kicker">Рабочая область</span><h1>Заказы и аналитика</h1><p>{{ current_date }} · {{ timezone }}</p></div>
+    {% if user.is_superuser %}<div class="admin-actions"><a class="btn btn-outline" href="{% url 'delivery_app:employee_statistics' %}">Статистика</a><a class="btn btn-outline" href="{% url 'delivery_app:employee_management' %}">Сотрудники</a><a class="btn btn-primary" href="{% url 'delivery_app:employee_products' %}">Товары</a></div>{% endif %}
+  </header>
 
-{% if user.is_superuser %}
-<p><a href="{% url 'delivery_app:employee_products' %}">Управление товарами</a></p>
-{% endif %}
-<!-- Фильтры -->
-<form method="get">
-    <label for="status_filter">Статус:</label>
-    <select name="status_filter" id="status_filter">
-        <option value="">Все</option>
-        {% for status, _ in status_choices %}
-            <option value="{{ status }}" {% if request.GET.status_filter == status %}selected{% endif %}>{{ status }}</option>
-        {% endfor %}
-    </select>
-    <label for="date_filter">Дата:</label>
-    <input type="date" name="date_filter" id="date_filter" value="{{ request.GET.date_filter }}">
-    <label for="type_filter">Тип товара:</label>
-    <select name="type_filter" id="type_filter">
-        <option value="">Все</option>
-        {% for type in product_types %}
-            <option value="{{ type.name }}" {% if request.GET.type_filter == type.name %}selected{% endif %}>{{ type.name }}</option>
-        {% endfor %}
-    </select>
-    <label for="delivery_method_filter">Способ доставки:</label>
-    <select name="delivery_method_filter" id="delivery_method_filter">
-        <option value="">Все</option>
-        {% for method, _ in delivery_methods %}
-            <option value="{{ method }}" {% if request.GET.delivery_method_filter == method %}selected{% endif %}>{{ method }}</option>
-        {% endfor %}
-    </select>
-    <button type="submit">Применить</button>
-</form>
+  <div class="metric-grid">
+    <article class="metric"><span>Всего заказов</span><strong>{{ total_orders }}</strong></article>
+    <article class="metric"><span>Выручка</span><strong>{{ total_sales|floatformat:2 }} <small>BYN</small></strong></article>
+    <article class="metric"><span>Средний чек</span><strong>{{ sales_mean|floatformat:2 }} <small>BYN</small></strong></article>
+    <article class="metric"><span>Доставлено</span><strong>{{ status_counts.Delivered|default:0 }}</strong></article>
+  </div>
 
-<!-- Список заказов -->
-<h3>Заказы</h3>
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Клиент</th>
-        <th>Сотрудник</th>
-        <th>Дата заказа</th>
-        <th>Статус</th>
-        <th>Общая стоимость</th>
-        <th>Точка выдачи</th>
-        <th>Стоимость доставки</th>
-        <th>Способ доставки</th>
-        <th>Дата доставки</th>
-        <th>Действия</th>
-    </tr>
-    {% for order_data in orders %}
-        {% with order=order_data.order %}
-        <tr>
-            <td>{{ order.id }}</td>
-            <td>{{ order.client.user.username }}</td>
-            <td>{{ order.employee.user.username|default:"Не назначен" }}</td>
-            <td>{{ order.date_ordered|date:'d/m/Y' }}</td>
-            <td>
-                <form method="post" action="{% url 'delivery_app:employee_panel' %}">
-                    {% csrf_token %}
-                    <select name="status">
-                        {% for status, display in status_choices %}
-                            <option value="{{ status }}" {% if order.status == status %}selected{% endif %}>{{ display }}</option>
-                        {% endfor %}
-                    </select>
-            </td>
-            <td>{{ order_data.total_cost|floatformat:2 }} BYN</td>
-            <td>{{ order.pickup_point.name|default:"-" }}</td>
-            <td>{{ order.delivery_cost }} BYN</td>
-            <td>{{ order.get_delivery_method_display }}</td>
-            <td>
-                    <input type="date" name="date_delivered" value="{{ order.date_delivered|date:'Y-m-d'|default_if_none:'' }}">
-            </td>
-            <td>
-                    <input type="hidden" name="order_id" value="{{ order.id }}">
-                    <input type="hidden" name="action" value="update">
-                    <button type="submit">Обновить</button>
-                </form>
-            </td>
-        </tr>
-        {% endwith %}
-    {% empty %}
-        <tr><td colspan="11">Нет заказов.</td></tr>
-    {% endfor %}
-</table>
+  <form method="get" class="filter-card">
+    <div><label for="status_filter">Статус</label><select name="status_filter" id="status_filter"><option value="">Все статусы</option>{% for status, label in status_choices %}<option value="{{ status }}" {% if request.GET.status_filter == status %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <div><label for="date_filter">Дата заказа</label><input type="date" name="date_filter" id="date_filter" value="{{ request.GET.date_filter }}"></div>
+    <div><label for="type_filter">Тип товара</label><select name="type_filter" id="type_filter"><option value="">Все типы</option>{% for type in product_types %}<option value="{{ type.name }}" {% if request.GET.type_filter == type.name %}selected{% endif %}>{{ type.name }}</option>{% endfor %}</select></div>
+    <div><label for="delivery_method_filter">Доставка</label><select name="delivery_method_filter" id="delivery_method_filter"><option value="">Все способы</option>{% for method, label in delivery_methods %}<option value="{{ method }}" {% if request.GET.delivery_method_filter == method %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <button class="btn btn-primary" type="submit">Применить</button>
+    <a class="reset-link" href="{% url 'delivery_app:employee_panel' %}">Сбросить</a>
+  </form>
 
-<h2>Распределение заказов по статусам</h2>
-<canvas id="statusChart" width="300" height="300"></canvas>
+  <section class="admin-card">
+    <div class="card-title"><div><h2>Заказы</h2><p>Обновляйте статус и дату доставки непосредственно в строке.</p></div><span class="count-pill">{{ total_orders }}</span></div>
+    <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Заказ</th><th>Клиент</th><th>Доставка</th><th>Оплата</th><th>Сумма</th><th>Исполнитель</th><th>Управление</th></tr></thead><tbody>
+      {% for order_data in orders %}{% with order=order_data.order %}
+      <tr>
+        <td><a href="{% url 'delivery_app:order_detail' order.id %}"><strong>#{{ order.id }}</strong></a><small>{{ order.date_ordered|date:'d.m.Y H:i' }}</small></td>
+        <td><strong>{{ order.client.user.username }}</strong><small>{{ order.client.phone }}</small></td>
+        <td>{{ order.get_delivery_method_display }}<small>{% if order.pickup_point %}{{ order.pickup_point.name }}{% else %}{{ order.delivery_address|default:'—' }}{% endif %}</small></td>
+        <td><span class="status status-{{ order.payment_status }}">{{ order.get_payment_status_display }}</span><small>{{ order.get_payment_method_display }}</small></td>
+        <td><strong>{{ order.total_cost|floatformat:2 }} BYN</strong><small>доставка {{ order.delivery_cost|floatformat:2 }}</small></td>
+        <td>
+          {% if user.is_superuser %}<form method="post" class="inline-form">{% csrf_token %}<input type="hidden" name="action" value="assign"><input type="hidden" name="order_id" value="{{ order.id }}"><select name="employee_id" aria-label="Исполнитель заказа {{ order.id }}"><option value="">Не назначен</option>{% for employee in employees %}<option value="{{ employee.id }}" {% if order.employee_id == employee.id %}selected{% endif %}>{{ employee.get_full_name }}</option>{% endfor %}</select><button class="icon-button" title="Назначить" type="submit">✓</button></form>{% else %}{{ order.employee.get_full_name|default:'Не назначен' }}{% endif %}
+        </td>
+        <td><form method="post" class="order-update">{% csrf_token %}<input type="hidden" name="action" value="update"><input type="hidden" name="order_id" value="{{ order.id }}"><select name="status" aria-label="Статус заказа {{ order.id }}">{% for status, label in status_choices %}<option value="{{ status }}" {% if order.status == status %}selected{% endif %}>{{ label }}</option>{% endfor %}</select><input type="date" name="date_delivered" aria-label="Дата доставки" value="{{ order.date_delivered|date:'Y-m-d' }}"><button class="btn btn-small btn-primary" type="submit">Сохранить</button></form></td>
+      </tr>
+      {% endwith %}{% empty %}<tr><td class="empty-row" colspan="7">По выбранным фильтрам заказов нет.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
 
+  <div class="analytics-grid">
+    <section class="admin-card chart-card"><div class="card-title"><div><h2>Статусы заказов</h2><p>Текущее распределение</p></div></div><div class="chart-wrap"><canvas id="statusChart"></canvas></div></section>
+    <section class="admin-card stats-list"><h2>Статистика</h2><dl><div><dt>Медианный чек</dt><dd>{{ sales_median|floatformat:2 }} BYN</dd></div><div><dt>Наиболее частый чек</dt><dd>{{ sales_mode|floatformat:2 }} BYN</dd></div><div><dt>Средний возраст клиентов</dt><dd>{{ age_mean|floatformat:0 }}</dd></div><div><dt>Медианный возраст</dt><dd>{{ age_median|floatformat:0 }}</dd></div></dl></section>
+  </div>
+</section>
+<style>
+.admin-page{padding:18px 0 54px}.admin-heading{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:18px;margin-bottom:22px;padding:24px;border:1px solid #dce8f3;border-radius:18px;background:linear-gradient(135deg,#fff 0%,#eef7ff 100%);box-shadow:0 16px 45px rgba(31,56,88,.08)}.admin-heading h1{margin:.25rem 0;text-transform:none;color:#17395d;line-height:1.1}.admin-heading p{margin:0;color:#5f7085}.admin-kicker{font-size:.76rem;font-weight:800;color:#1f7a4b;letter-spacing:.13em;text-transform:uppercase}.admin-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}.admin-actions .btn{min-width:132px}.metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}.metric,.admin-card,.filter-card{background:#fff;border:1px solid #dfe7ef;border-radius:16px;box-shadow:0 8px 28px rgba(31,56,88,.07)}.metric{padding:18px;border-top:4px solid #2c5aa0}.metric span{display:block;color:#64748b;font-size:.82rem}.metric strong{display:block;color:#18324e;font-size:1.7rem;margin-top:5px;line-height:1.12}.metric small{font-size:.7rem}.filter-card{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr)) minmax(130px,auto) minmax(90px,auto);align-items:end;gap:12px;padding:16px;margin-bottom:18px}.filter-card label{display:block;font-size:.78rem;font-weight:700;margin-bottom:5px;color:#536579}.filter-card select,.filter-card input,.admin-table select,.admin-table input{width:100%;min-height:40px;border:1px solid #cfd9e4;border-radius:8px;padding:8px;background:#fff;color:#24364b}.reset-link{align-self:center;padding:10px 4px;text-align:center}.admin-card{padding:20px;margin-bottom:18px}.card-title{display:flex;justify-content:space-between;gap:15px;align-items:flex-start;margin-bottom:12px}.card-title h2,.stats-list h2{font-size:1.2rem;text-transform:none;margin:0;color:#18324e}.card-title p{font-size:.86rem;margin:2px 0;color:#66758a}.count-pill{flex:0 0 auto;background:#eef4fb;color:#2c5aa0;border-radius:999px;padding:5px 10px;font-weight:750}.admin-table-wrap{overflow-x:auto}.admin-table{width:100%;border-collapse:collapse;min-width:1050px}.admin-table th{padding:10px;text-align:left;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #dde5ed}.admin-table td{padding:13px 10px;border-bottom:1px solid #edf1f5;vertical-align:top;font-size:.88rem}.admin-table td small{display:block;color:#718096;margin-top:3px}.status{display:inline-flex;border-radius:999px;padding:3px 8px;font-size:.72rem;font-weight:700}.status-paid{background:#dcfce7;color:#166534}.status-pending{background:#fef3c7;color:#92400e}.status-failed{background:#fee2e2;color:#991b1b}.inline-form{display:flex;gap:5px;align-items:center}.icon-button{min-height:40px;border:0;border-radius:8px;background:#e8f7ef;color:#18794e;padding:0 11px;cursor:pointer}.order-update{display:grid;grid-template-columns:minmax(120px,1fr) minmax(130px,1fr) auto;gap:6px}.empty-row{text-align:center!important;padding:35px!important}.analytics-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:18px}.chart-wrap{position:relative;height:300px}.stats-list dl{margin:0}.stats-list dl div{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid #edf1f5}.stats-list dt{color:#64748b}.stats-list dd{font-weight:750;color:#18324e;text-align:right}@media(max-width:1080px){.filter-card{grid-template-columns:repeat(2,minmax(0,1fr))}.filter-card .btn,.filter-card .reset-link{width:100%}.analytics-grid{grid-template-columns:1fr}}@media(max-width:900px){.admin-heading{grid-template-columns:1fr;align-items:start}.admin-actions{justify-content:flex-start}.metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:650px){.admin-heading,.admin-card,.filter-card{padding:15px}.admin-actions{width:100%}.admin-actions .btn{flex:1 1 145px;min-width:0}.metric-grid,.filter-card{grid-template-columns:1fr}.metric{padding:14px}.metric strong{font-size:1.35rem}.card-title{flex-direction:column}.order-update{grid-template-columns:1fr}.inline-form{align-items:stretch}.inline-form .icon-button{flex:0 0 44px}}
+</style>
+<style>
+.admin-page{overflow:visible}.admin-heading{display:flex;align-items:center;justify-content:space-between;gap:22px;max-width:100%;overflow:visible}.admin-heading>div{min-width:0}.admin-heading h1{font-size:clamp(2rem,4vw,3rem);margin:0 0 8px;overflow-wrap:anywhere}.admin-actions{display:flex;flex:0 0 auto;min-width:0;gap:10px;flex-wrap:wrap}.admin-actions .btn{flex:0 1 auto}.metric-grid{margin-top:0}.admin-table-wrap{overflow-x:auto}.order-update{grid-template-columns:minmax(135px,1fr) minmax(150px,1fr) minmax(128px,auto)}.order-update .btn{min-width:128px;white-space:normal}.inline-form select{min-width:190px}@media(max-width:900px){.admin-heading{align-items:flex-start;flex-direction:column}.admin-actions{width:100%}.admin-actions .btn{flex:1 1 145px}}@media(max-width:650px){.order-update{grid-template-columns:1fr}.inline-form{flex-wrap:wrap}.inline-form select{min-width:0}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Получаем данные из контекста
-    const statusCounts = {
-        {% for status, count in status_counts.items %}
-            "{{ status }}": {{ count }},
-        {% endfor %}
-    };
-
-    // Подготовка данных для диаграммы
-    const labels = Object.keys(statusCounts);
-    const data = Object.values(statusCounts);
-
-    // Создаём круговую диаграмму
-    const ctx = document.getElementById('statusChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Количество заказов',
-                data: data,
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.7)',  // Красный
-                    'rgba(54, 162, 235, 0.7)',  // Синий
-                    'rgba(255, 206, 86, 0.7)',  // Жёлтый
-                    'rgba(75, 192, 192, 0.7)',  // Бирюзовый
-                    'rgba(153, 102, 255, 0.7)', // Фиолетовый
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(153, 102, 255, 1)',
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: false,  // Отключаем адаптивность для фиксированного размера
-            maintainAspectRatio: false,  // Разрешаем не сохранять пропорции
-            plugins: {
-                legend: {
-                    position: 'top',
-                    labels: {
-                        boxWidth: 10,  // Уменьшаем размер квадратиков в легенде
-                        font: {
-                            size: 12  // Уменьшаем размер шрифта в легенде
-                        }
-                    }
-                },
-                title: {
-                    display: true,
-                    text: 'Заказы по статусам',
-                    font: {
-                        size: 14  // Уменьшаем размер шрифта заголовка
-                    }
-                }
-            }
-        }
-    });
+const statusCounts={% for status, count in status_counts.items %}"{{ status }}":{{ count }}{% if not forloop.last %},{% endif %}{% endfor %}};
+if (window.Chart) {
+  new Chart(document.getElementById('statusChart'),{type:'doughnut',data:{labels:Object.keys(statusCounts),datasets:[{data:Object.values(statusCounts),backgroundColor:['#f59e0b','#3b82f6','#22c55e','#ef4444'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom'}}}});
+} else {
+  document.querySelector('.chart-wrap').innerHTML='<p class="empty-row">Диаграмма недоступна без подключения библиотеки графиков.</p>';
+}
 </script>
-
-<!-- Статистика -->
-<h2>Статистика</h2>
-<p>Всего заказов: {{ total_orders }}</p>
-<ul>
-    {% for status, count in status_counts.items %}
-        <li>{{ status }}: {{ count }}</li>
-    {% endfor %}
-</ul>
-<p>Общая сумма продаж: {{ total_sales|floatformat:2 }} BYN</p>
-<p>Средняя сумма продаж: {{ sales_mean|floatformat:2 }} BYN</p>
-<p>Медиана суммы продаж: {{ sales_median|floatformat:2 }} BYN</p>
-<p>Мода суммы продаж: {{ sales_mode|floatformat:2 }} BYN</p>
-<p>Средний возраст клиентов: {{ age_mean|floatformat:0 }} лет</p>
-<p>Медиана возраста клиентов: {{ age_median|floatformat:0 }} лет</p>
-
-<h3>Популярные типы товаров</h3>
-<ul>
-    {% for type in popular_types %}
-        <li>{{ type.name }}: {{ type.order_count }} заказов</li>
-    {% empty %}
-        <li>Нет данных о заказах.</li>
-    {% endfor %}
-</ul>
-
-<h3>Прибыль по типам товаров</h3>
-<ul>
-    {% for type in profit_by_type %}
-        <li>{{ type.name }}: {{ type.total_profit|floatformat:2 }} BYN</li>
-    {% empty %}
-        <li>Нет данных о прибыли.</li>
-    {% endfor %}
-</ul>
-
-<h3>Список клиентов (в алфавитном порядке)</h3>
-<ul>
-    {% for client in clients_alpha %}
-        <li>{{ client.user.username }} - Телефон: {{ client.phone }}</li>
-    {% endfor %}
-</ul>
-
 {% endblock %}

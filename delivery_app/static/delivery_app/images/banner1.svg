@@ -1,7 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200">
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="200" viewBox="0 0 800 200" preserveAspectRatio="xMidYMid meet">
   <rect width="100%" height="100%" fill="#4CAF50" rx="20" ry="20"/>
-  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
-        fill="white" font-size="38" font-family="Arial" font-weight="bold">
-    Быстрая доставка продуктов
-  </text>
+  <circle cx="400" cy="95" r="60" fill="none" stroke="white" stroke-width="10" opacity=".92"/>
+  <path d="M400 95 L400 57 M400 95 L432 112" fill="none" stroke="white" stroke-width="10" stroke-linecap="round"/>
+  <path d="M485 66 C560 28 650 35 735 82" fill="none" stroke="white" stroke-width="12" stroke-linecap="round" opacity=".22"/>
+  <circle cx="90" cy="45" r="65" fill="white" opacity=".08"/>
+  <circle cx="710" cy="175" r="95" fill="white" opacity=".08"/>
 </svg>

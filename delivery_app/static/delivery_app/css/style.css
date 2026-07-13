@@ -1,6 +1,6 @@
-/* ===== ОБЩИЕ СТИЛИ САЙТА ===== */
+
 :root {
-    /* Цветовая схема */
+    
     --primary-color: #2c5aa0;
     --primary-dark: #1e3d6f;
     --primary-light: #3a6bc0;
@@ -16,7 +16,7 @@
     --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
-/* Сброс стилей и базовые настройки */
+
 * {
     margin: 0;
     padding: 0;
@@ -30,7 +30,7 @@ body {
     background-color: var(--bg-light);
 }
 
-/* ===== ТИПОГРАФИЯ ===== */
+
 h1, h2, h3, h4, h5, h6 {
     color: var(--primary-color);
     margin-bottom: 1rem;
@@ -70,7 +70,7 @@ a:hover {
     color: var(--primary-dark);
 }
 
-/* ===== КНОПКИ ===== */
+
 .btn {
     display: inline-block;
     padding: 12px 24px;
@@ -133,7 +133,7 @@ a:hover {
     font-size: 0.9em;
 }
 
-/* ===== ФОРМЫ ===== */
+
 .form-group {
     margin-bottom: 1.5rem;
 }
@@ -178,7 +178,7 @@ a:hover {
     margin-top: 0.25rem;
 }
 
-/* Чекбоксы и радиокнопки */
+
 .form-check {
     display: flex;
     align-items: center;
@@ -193,7 +193,7 @@ a:hover {
     margin-bottom: 0;
 }
 
-/* ===== КАРТОЧКИ ===== */
+
 .card {
     background: var(--bg-white);
     border-radius: 12px;
@@ -223,7 +223,7 @@ a:hover {
     border-top: 1px solid var(--border-color);
 }
 
-/* ===== НАВИГАЦИЯ И ШАПКА ===== */
+
 .navbar {
     background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
     padding: 1rem 0;
@@ -257,7 +257,7 @@ a:hover {
     font-weight: 500;
 }
 
-/* Специфичные стили для иконок в навбаре */
+
 .navbar-nav .nav-link .fa,
 .navbar-nav .nav-link .material-icons,
 .navbar-nav .nav-link .icon {
@@ -265,11 +265,12 @@ a:hover {
     font-size: 1.1em;
 }
 
-/* ===== СЕТКА И КОНТЕЙНЕРЫ ===== */
+
 .container {
+    width: min(calc(100% - 32px), 1200px);
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0;
 }
 
 .container-sm {
@@ -310,7 +311,7 @@ a:hover {
     padding: 0 15px;
 }
 
-/* ===== СЕКЦИИ ===== */
+
 .section {
     padding: 60px 0;
 }
@@ -345,7 +346,7 @@ a:hover {
     color: white;
 }
 
-/* ===== ТАБЛИЦЫ ===== */
+
 .table {
     width: 100%;
     border-collapse: collapse;
@@ -369,7 +370,7 @@ a:hover {
     background-color: rgba(44, 90, 160, 0.05);
 }
 
-/* ===== УТИЛИТЫ ===== */
+
 .text-center {
     text-align: center;
 }
@@ -413,7 +414,7 @@ a:hover {
 .w-100 { width: 100%; }
 .h-100 { height: 100%; }
 
-/* ===== СТАТУСЫ И БЭДЖИ ===== */
+
 .badge {
     display: inline-block;
     padding: 4px 8px;
@@ -443,7 +444,7 @@ a:hover {
     color: white;
 }
 
-/* ===== АЛЕРТЫ И УВЕДОМЛЕНИЯ ===== */
+
 .alert {
     padding: 15px 20px;
     border-radius: 8px;
@@ -475,7 +476,7 @@ a:hover {
     color: var(--primary-dark);
 }
 
-/* ===== ПРОФИЛЬ И ЛИЧНЫЙ КАБИНЕТ ===== */
+
 .profile-card {
     text-align: center;
     padding: 2rem;
@@ -522,7 +523,7 @@ a:hover {
     color: var(--text-light);
 }
 
-/* ===== ПАНЕЛЬ СОТРУДНИКА ===== */
+
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -562,7 +563,7 @@ a:hover {
     font-size: 0.9em;
 }
 
-/* ===== ФОРМЫ ВХОДА И РЕГИСТРАЦИИ ===== */
+
 .auth-container {
     min-height: 100vh;
     display: flex;
@@ -604,7 +605,7 @@ a:hover {
     margin-bottom: 1rem;
 }
 
-/* ===== ПОДВАЛ ===== */
+
 .footer {
     background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
     color: white;
@@ -635,7 +636,7 @@ a:hover {
     transform: translateY(-2px);
 }
 
-/* ===== АДАПТИВНОСТЬ ===== */
+
 @media (max-width: 768px) {
     .container {
         padding: 0 15px;
@@ -689,7 +690,7 @@ a:hover {
     }
 }
 
-/* ===== АНИМАЦИИ ===== */
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -720,7 +721,7 @@ a:hover {
     animation: slideIn 0.3s ease-out;
 }
 
-/* ===== ЗАГРУЗКИ И СОСТОЯНИЯ ===== */
+
 .loading {
     display: inline-block;
     width: 20px;
@@ -737,7 +738,7 @@ a:hover {
     }
 }
 
-/* Стили для пустых состояний */
+
 .empty-state {
     text-align: center;
     padding: 3rem 1rem;
@@ -750,7 +751,7 @@ a:hover {
     opacity: 0.5;
 }
 
-/* ===== КАСТОМНЫЕ ПОЛОСЫ ПРОКРУТКИ ===== */
+
 ::-webkit-scrollbar {
     width: 8px;
 }
@@ -768,13 +769,13 @@ a:hover {
     background: var(--primary-dark);
 }
 
-/* ===== ИКОНКИ И СВГ ===== */
+
 .icon {
     color: inherit;
     fill: currentColor;
 }
 
-/* Иконки в навигации */
+
 .navbar .fa-icon,
 .navbar .material-icons,
 .navbar .icon {
@@ -788,7 +789,7 @@ a:hover {
     color: white;
 }
 
-/* Иконки социальных сетей в футере */
+
 .social-icons {
     display: flex;
     gap: 15px;
@@ -814,7 +815,7 @@ a:hover {
     color: white;
 }
 
-/* Иконка корзины в навбаре */
+
 .cart-icon {
     position: relative;
     color: rgba(255, 255, 255, 0.9);
@@ -845,7 +846,7 @@ a:hover {
     font-weight: bold;
 }
 
-/* Иконки продуктов и категорий */
+
 .product-icon,
 .category-icon {
     font-size: 2em;
@@ -853,19 +854,19 @@ a:hover {
     color: var(--primary-color);
 }
 
-/* Иконки преимуществ */
+
 .benefit-icon {
     font-size: 3em;
     margin-bottom: 1rem;
     color: var(--primary-color);
 }
 
-/* Сброс стилей для SVG */
+
 svg {
     fill: currentColor;
 }
 
-/* Специфичные стили для Font Awesome и других библиотек иконок */
+
 .fa, .fas, .far, .fal, .fab {
     color: inherit;
 }
@@ -874,7 +875,7 @@ svg {
     color: inherit;
 }
 
-/* Иконки в кнопках */
+
 .btn .fa,
 .btn .material-icons,
 .btn .icon {

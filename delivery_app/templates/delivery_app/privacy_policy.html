@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="privacy-simple">
-    <!-- Простой заголовок -->
+    
     <div class="simple-header">
         <h1>Политика конфиденциальности</h1>
         <div class="header-info">
@@ -13,13 +13,13 @@
         </div>
     </div>
 
-    <!-- Основное содержание -->
+    
     <div class="simple-content">
         <div class="intro-box">
             <p><strong>Ваша конфиденциальность важна для нас.</strong> В этой политике объясняется, как мы собираем, используем и защищаем ваши данные.</p>
         </div>
 
-        <!-- Разделы политики -->
+        
         <div class="sections-list">
             {% for section in sections %}
             <div class="section-item">
@@ -34,7 +34,7 @@
             {% endfor %}
         </div>
 
-        <!-- Контакты -->
+        
         <div class="contacts-box">
             <h4>По вопросам конфиденциальности:</h4>
             <div class="contact-links">
@@ -60,7 +60,7 @@
     line-height: 1.5;
 }
 
-/* Заголовок */
+
 .simple-header {
     background: #84b5ff;
     color: white;
@@ -81,7 +81,7 @@
     opacity: 0.9;
 }
 
-/* Основной контент */
+
 .simple-content {
     background: white;
     border: 1px solid #e0e0e0;
@@ -89,7 +89,7 @@
     padding: 30px;
 }
 
-/* Введение */
+
 .intro-box {
     background: #f8f9fa;
     padding: 20px;
@@ -103,7 +103,7 @@
     color: #333;
 }
 
-/* Список разделов */
+
 .sections-list {
     margin-bottom: 30px;
 }
@@ -170,7 +170,7 @@
     margin-bottom: 5px;
 }
 
-/* Контакты */
+
 .contacts-box {
     background: #f0f8ff;
     padding: 20px;
@@ -207,7 +207,7 @@
     border-color: #2c5aa0;
 }
 
-/* Адаптивность */
+
 @media (max-width: 768px) {
     .privacy-simple {
         margin: 70px auto 30px;
@@ -255,6 +255,47 @@
     
     .contacts-box {
         padding: 15px;
+    }
+}
+
+.privacy-simple {
+    width: 100%;
+    margin: 18px auto 54px;
+    padding: 0;
+}
+
+.privacy-simple .simple-header {
+    padding: 24px;
+    border: 1px solid #dce8f3;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #fff 0%, #eef7ff 100%);
+    color: #17395d;
+    text-align: left;
+    box-shadow: 0 16px 45px rgba(31, 56, 88, .08);
+}
+
+.privacy-simple .simple-header h1 {
+    color: #17395d;
+    font-size: clamp(1.65rem, 3vw, 2.25rem);
+    line-height: 1.1;
+    text-transform: none;
+}
+
+.privacy-simple .header-info {
+    display: inline-flex;
+    margin-top: 8px;
+    padding: 7px 11px;
+    border-radius: 999px;
+    background: #e8f7ef;
+    color: #18794e;
+    font-weight: 750;
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .privacy-simple {
+        margin: 12px auto 42px;
+        padding: 0;
     }
 }
 </style>

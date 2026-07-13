@@ -18,7 +18,7 @@
         <p class="current-date">Дата: {{ current_date }} | Временная зона: {{ timezone }}</p>
     </div>
 
-    <!-- Фильтры и поиск -->
+    
     <div class="news-filters">
         <div class="search-box">
             <input type="text" id="news-search" placeholder="Поиск по новостям..." class="search-input">
@@ -35,7 +35,7 @@
         </div>
     </div>
 
-    <!-- Список новостей -->
+    
     <div class="news-grid">
         {% for article in articles %}
         <article class="news-card" data-date="{{ article.published_date|date:'Y-m-d' }}">
@@ -90,7 +90,7 @@
         {% endfor %}
     </div>
 
-    <!-- Пагинация -->
+    
     {% if articles.has_other_pages %}
     <div class="pagination">
         {% if articles.has_previous %}
@@ -115,7 +115,7 @@
     </div>
     {% endif %}
 
-    <!-- Подписка на новости -->
+    
     <div class="newsletter-section">
         <div class="newsletter-content">
             <h2>Подпишитесь на наши новости</h2>
@@ -156,7 +156,7 @@
     font-size: 0.9em;
 }
 
-/* Фильтры и поиск */
+
 .news-filters {
     display: flex;
     justify-content: space-between;
@@ -210,7 +210,7 @@
     border-radius: 5px;
 }
 
-/* Сетка новостей */
+
 .news-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -355,7 +355,7 @@
     transform: translateY(-2px);
 }
 
-/* Пустое состояние */
+
 .no-news {
     grid-column: 1 / -1;
     text-align: center;
@@ -372,7 +372,7 @@
     margin-bottom: 10px;
 }
 
-/* Пагинация */
+
 .pagination {
     display: flex;
     justify-content: center;
@@ -399,7 +399,7 @@
     border-color: #2c5aa0;
 }
 
-/* Подписка на новости */
+
 .newsletter-section {
     background: linear-gradient(135deg, #9ac2ff 0%, #79acff 100%);
     border-radius: 10px;
@@ -440,7 +440,7 @@
     font-weight: 500;
 }
 
-/* Адаптивность */
+
 @media (max-width: 768px) {
     .news-filters {
         flex-direction: column;
@@ -491,7 +491,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Поиск по новостям
     const searchInput = document.getElementById('news-search');
     const newsCards = document.querySelectorAll('.news-card');
     
@@ -512,7 +511,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Сортировка новостей
     const sortSelect = document.getElementById('sort-news');
     
     if (sortSelect) {
@@ -532,7 +530,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
-            // Очищаем контейнер и добавляем отсортированные элементы
             newsContainer.innerHTML = '';
             newsItems.forEach(item => {
                 newsContainer.appendChild(item);
@@ -540,7 +537,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Кнопки поделиться
     const shareButtons = document.querySelectorAll('.share-btn');
     
     shareButtons.forEach(button => {
@@ -558,7 +554,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Подписка на рассылку
     const newsletterForm = document.querySelector('.newsletter-form');
     
     if (newsletterForm) {
@@ -566,7 +561,6 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const email = this.querySelector('input[type="email"]').value;
             
-            // Здесь будет код для отправки email на сервер
             alert(`Спасибо за подписку! На адрес ${email} будут приходить наши новости.`);
             this.reset();
         });

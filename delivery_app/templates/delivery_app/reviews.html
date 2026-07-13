@@ -13,7 +13,7 @@
         <p class="current-date">Дата: {{ current_date }} | Временная зона: {{ timezone }}</p>
     </div>
 
-    <!-- Статистика отзывов -->
+    
     <div class="reviews-stats">
         <div class="stats-card">
             <div class="stats-icon">⭐</div>
@@ -38,7 +38,7 @@
         </div>
     </div>
 
-    <!-- Кнопка добавления отзыва -->
+    
     <div class="add-review-section">
         {% if user.is_authenticated %}
             <button class="btn btn-primary btn-large" id="showReviewForm">
@@ -55,7 +55,7 @@
         {% endif %}
     </div>
 
-    <!-- Форма добавления отзыва (скрыта по умолчанию) -->
+    
     {% if user.is_authenticated %}
     <div class="review-form-container" id="reviewFormContainer" style="display: none;">
         <div class="review-form">
@@ -99,7 +99,7 @@
     </div>
     {% endif %}
 
-    <!-- Фильтры и сортировка -->
+    
     <div class="reviews-filters">
         <div class="filter-group">
             <label>Сортировать по:</label>
@@ -123,7 +123,7 @@
         </div>
     </div>
 
-    <!-- Список отзывов -->
+    
     <div class="reviews-list">
         {% for review in reviews %}
         <div class="review-card" data-rating="{{ review.rating }}">
@@ -174,7 +174,7 @@
         {% endfor %}
     </div>
 
-    <!-- Пагинация -->
+    
     {% if reviews.has_other_pages %}
     <div class="pagination">
         {% if reviews.has_previous %}
@@ -228,7 +228,7 @@
     font-size: 0.9em;
 }
 
-/* Статистика */
+
 .reviews-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -268,7 +268,7 @@
     color: #6c757d;
 }
 
-/* Кнопка добавления отзыва */
+
 .add-review-section {
     text-align: center;
     margin-bottom: 30px;
@@ -288,7 +288,7 @@
     justify-content: center;
 }
 
-/* Форма отзыва */
+
 .review-form-container {
     background: white;
     border-radius: 10px;
@@ -375,7 +375,7 @@ select:focus {
     justify-content: flex-end;
 }
 
-/* Фильтры */
+
 .reviews-filters {
     display: flex;
     flex-wrap: wrap;
@@ -425,7 +425,7 @@ select:focus {
     border-color: #2c5aa0;
 }
 
-/* Список отзывов */
+
 .reviews-list {
     display: flex;
     flex-direction: column;
@@ -543,7 +543,7 @@ select:focus {
     font-size: 0.8em;
 }
 
-/* Пустой состояние */
+
 .no-reviews {
     text-align: center;
     padding: 40px 0;
@@ -559,7 +559,7 @@ select:focus {
     margin-bottom: 10px;
 }
 
-/* Пагинация */
+
 .pagination {
     display: flex;
     justify-content: center;
@@ -590,7 +590,7 @@ select:focus {
     border-color: #2c5aa0;
 }
 
-/* Адаптивность */
+
 @media (max-width: 768px) {
     .reviews-stats {
         grid-template-columns: 1fr;
@@ -617,7 +617,6 @@ select:focus {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Показать/скрыть форму отзыва
     const showReviewFormBtn = document.getElementById('showReviewForm');
     const reviewFormContainer = document.getElementById('reviewFormContainer');
     const cancelReviewBtn = document.getElementById('cancelReview');
@@ -636,20 +635,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Фильтрация по рейтингу
     const filterButtons = document.querySelectorAll('.filter-btn');
     const reviewCards = document.querySelectorAll('.review-card');
     
     filterButtons.forEach(button => {
         button.addEventListener('click', function() {
-            // Убрать активный класс со всех кнопок
             filterButtons.forEach(btn => btn.classList.remove('active'));
-            // Добавить активный класс к текущей кнопке
             this.classList.add('active');
             
             const rating = this.getAttribute('data-rating');
             
-            // Показать/скрыть отзывы в зависимости от рейтинга
             reviewCards.forEach(card => {
                 if (rating === 'all' || card.getAttribute('data-rating') === rating) {
                     card.style.display = 'block';
@@ -660,34 +655,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Сортировка отзывов
     const sortSelect = document.getElementById('sortReviews');
     if (sortSelect) {
         sortSelect.addEventListener('change', function() {
-            // Здесь будет логика сортировки (обычно через перезагрузку страницы с параметрами)
             const sortBy = this.value;
             window.location.href = `?sort=${sortBy}`;
         });
     }
     
-    // Обработка кнопки "Отзыв полезен"
     const helpfulButtons = document.querySelectorAll('.helpful-btn');
     helpfulButtons.forEach(button => {
         button.addEventListener('click', function() {
             const reviewId = this.getAttribute('data-review-id');
             const countElement = this.querySelector('.helpful-count');
             
-            // Имитация отправки запроса на сервер
             this.disabled = true;
             this.style.opacity = '0.7';
             
-            // В реальном приложении здесь будет AJAX-запрос к серверу
             setTimeout(() => {
                 let count = parseInt(countElement.textContent);
                 count++;
                 countElement.textContent = count;
                 
-                // Восстанавливаем кнопку после "отправки"
                 this.innerHTML = '<i class="fas fa-check"></i> Спасибо за ваш голос!';
             }, 500);
         });

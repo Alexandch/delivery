@@ -76,11 +76,11 @@
         </div>
     </div>
 
-    <!-- Календарь в отдельной карточке -->
+    
     <div class="calendar-card">
         <div class="card">
             <div class="card-header">
-                <h3>Календарь на {{ current_date|slice:":7" }}</h3>
+                <h3>Календарь на {{ current_date }}</h3>
             </div>
             <div class="card-body">
                 <table class="calendar-table">
@@ -113,7 +113,7 @@
 </div>
 
 <style>
-/* Специфичные стили для страницы регистрации */
+
 .auth-container {
     display: grid;
     grid-template-columns: 1fr 300px;
@@ -232,7 +232,7 @@
     text-decoration: underline;
 }
 
-/* Стили для календаря */
+
 .calendar-card {
     margin-top: 0;
 }
@@ -262,7 +262,7 @@
     color: var(--text-light);
 }
 
-/* Адаптивность */
+
 @media (max-width: 768px) {
     .auth-container {
         grid-template-columns: 1fr;
@@ -305,7 +305,7 @@
     }
 }
 
-/* Анимации */
+
 .auth-card {
     animation: slideInUp 0.6s ease-out;
 }
@@ -325,7 +325,7 @@
     }
 }
 
-/* Стили для ошибок полей */
+
 .form-group .error {
     color: #dc3545;
     font-size: 0.875em;
@@ -336,12 +336,12 @@
     border-color: #dc3545;
 }
 
-/* Стили для успешной валидации */
+
 .form-control.valid {
     border-color: var(--secondary-color);
 }
 
-/* Улучшенные стили для алертов */
+
 .alert {
     display: flex;
     align-items: flex-start;
@@ -375,18 +375,18 @@
     border-color: #17a2b8;
     color: #0c5460;
 }
-/* Стили для поля даты рождения */
+
 #id_date_of_birth {
     background-color: white;
 }
 
-/* Анимации для сообщений */
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Специфичные стили для сообщения о дате рождения */
+
 #dob-message {
     font-size: 0.9em;
     padding: 10px 15px;
@@ -394,7 +394,7 @@
     margin-top: 8px;
 }
 
-/* Подсветка поля даты рождения при ошибке/успехе */
+
 #id_date_of_birth.error {
     border-color: #dc3545;
     background-color: rgba(220, 53, 69, 0.05);
@@ -405,14 +405,14 @@
     background-color: rgba(40, 167, 69, 0.05);
 }
 
-/* Адаптивность для поля даты рождения */
+
 @media (max-width: 480px) {
     #id_date_of_birth {
-        font-size: 16px; /* Предотвращает зум в iOS */
+        font-size: 16px; 
     }
 }
 
-/* Улучшенные стили для формы */
+
 .form-group {
     position: relative;
 }
@@ -422,7 +422,7 @@
     font-weight: 700;
 }
 
-/* Индикатор загрузки для проверки даты */
+
 .loading {
     opacity: 0.7;
     pointer-events: none;
@@ -431,19 +431,16 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Добавляем обработчики для динамической валидации
     const form = document.querySelector('.auth-form');
     const inputs = form.querySelectorAll('.form-control');
     
     inputs.forEach(input => {
-        // Добавляем классы при фокусе
         input.addEventListener('focus', function() {
             this.parentElement.classList.add('focused');
         });
         
         input.addEventListener('blur', function() {
             this.parentElement.classList.remove('focused');
-            // Простая валидация на клиенте
             if (this.value.trim() !== '') {
                 this.classList.add('valid');
                 this.classList.remove('error');
@@ -453,7 +450,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Валидация при вводе
         input.addEventListener('input', function() {
             if (this.value.trim() !== '') {
                 this.classList.remove('error');
@@ -462,7 +458,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Валидация формы при отправке
     form.addEventListener('submit', function(e) {
         let valid = true;
         inputs.forEach(input => {
@@ -474,7 +469,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!valid) {
             e.preventDefault();
-            // Прокрутка к первой ошибке
             const firstError = form.querySelector('.error');
             if (firstError) {
                 firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -485,11 +479,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Добавляем обработчики для динамической валидации
     const form = document.querySelector('.auth-form');
     const inputs = form.querySelectorAll('.form-control');
     
-    // Обработчик для поля даты рождения
     const dobField = document.getElementById('id_date_of_birth');
     if (dobField) {
         dobField.addEventListener('change', function() {
@@ -502,14 +494,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     inputs.forEach(input => {
-        // Добавляем классы при фокусе
         input.addEventListener('focus', function() {
             this.parentElement.classList.add('focused');
         });
         
         input.addEventListener('blur', function() {
             this.parentElement.classList.remove('focused');
-            // Простая валидация на клиенте
             if (this.value.trim() !== '') {
                 this.classList.add('valid');
                 this.classList.remove('error');
@@ -519,7 +509,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Валидация при вводе
         input.addEventListener('input', function() {
             if (this.value.trim() !== '') {
                 this.classList.remove('error');
@@ -528,7 +517,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Валидация формы при отправке
     form.addEventListener('submit', function(e) {
         let valid = true;
         inputs.forEach(input => {
@@ -538,14 +526,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Дополнительная проверка даты рождения
         if (dobField && !validateDateOfBirth(dobField, true)) {
             valid = false;
         }
         
         if (!valid) {
             e.preventDefault();
-            // Прокрутка к первой ошибке
             const firstError = form.querySelector('.error');
             if (firstError) {
                 firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -554,7 +540,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Функция валидации даты рождения
     function validateDateOfBirth(field, showAlert = false) {
         const value = field.value;
         const messageContainer = document.getElementById('dob-message') || createDOBMessageContainer(field);
@@ -574,7 +559,6 @@ document.addEventListener('DOMContentLoaded', function() {
             age--;
         }
         
-        // Проверка на будущую дату
         if (birthDate > today) {
             field.classList.add('error');
             field.classList.remove('valid');
@@ -584,7 +568,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
         
-        // Проверка возраста
         const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
         const dayOfWeek = daysOfWeek[birthDate.getDay()];
         
@@ -609,7 +592,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Создание контейнера для сообщений о дате рождения
     function createDOBMessageContainer(field) {
         const container = document.createElement('div');
         container.id = 'dob-message';
@@ -617,7 +599,6 @@ document.addEventListener('DOMContentLoaded', function() {
         container.style.display = 'none';
         container.style.marginTop = '10px';
         
-        // Вставляем контейнер после поля даты рождения
         field.parentNode.insertBefore(container, field.nextSibling);
         return container;
     }

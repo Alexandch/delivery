@@ -1,106 +1,45 @@
 {% extends "delivery_app/base.html" %}
-
+{% block title %}Управление товарами{% endblock %}
 {% block content %}
-<h2>Управление товарами</h2>
-<p>Дата: {{ current_date }} | Временная зона: {{ timezone }}</p>
+<section class="catalog-admin">
+  <header class="catalog-heading"><div><span>Администрирование каталога</span><h1>Товары и категории</h1><p>{{ current_date }} · {{ timezone }}</p></div><a class="btn btn-outline" href="{% url 'delivery_app:employee_panel' %}">← К заказам</a></header>
 
-<h3>Товары</h3>
-<table border="1">
-    <tr>
-        <th>Название</th>
-        <th>Цена</th>
-        <th>Ед. измерения</th>
-        <th>Тип</th>
-        <th>Производитель</th>
-        <th>Действия</th>
-    </tr>
+  <details class="editor-card create-card" open><summary>Добавить товар</summary>
+    <form method="post" class="product-form add-form">{% csrf_token %}<input type="hidden" name="action" value="update_product">
+      <label>Название<input required name="name" placeholder="Название товара"></label>
+      <label>Цена, BYN<input required type="number" min="0.01" name="price" step="0.01" placeholder="0.00"></label>
+      <label>Единица<select required name="unit_of_measurement"><option value="pieces">Штуки</option><option value="kg">Килограммы</option><option value="liters">Литры</option></select></label>
+      <label>Тип<select required name="product_type"><option value="">Выберите тип</option>{% for type in product_types %}<option value="{{ type.id }}">{{ type.name }}</option>{% endfor %}</select></label>
+      <label>Производитель<select name="manufacturer"><option value="">Не указан</option>{% for manufacturer in manufacturers %}<option value="{{ manufacturer.id }}">{{ manufacturer.name }}</option>{% endfor %}</select></label>
+      <button class="btn btn-primary" type="submit">Добавить товар</button>
+    </form>
+  </details>
+
+  <section class="editor-card"><div class="section-title"><div><h2>Каталог</h2><p>Редактирование сохраняется отдельно для каждой позиции.</p></div><span>{{ products|length }} поз.</span></div>
+    <div class="product-edit-list">
     {% for product in products %}
-    <tr>
-        <td>{{ product.name }}</td>
-        <td>{{ product.price|floatformat:2 }} BYN</td>
-        <td>{{ product.unit_of_measurement }}</td>
-        <td>{{ product.product_type.name }}</td>
-        <td>{{ product.manufacturer.name|default:"-" }}</td>
-        <td>
-            <form method="post" action="{% url 'delivery_app:employee_products' %}">
-                {% csrf_token %}
-                <input type="hidden" name="product_id" value="{{ product.id }}">
-                <input type="text" name="name" value="{{ product.name }}">
-                <input type="number" name="price" value="{{ product.price }}" step="0.01">
-                <input type="text" name="unit_of_measurement" value="{{ product.unit_of_measurement }}">
-                <select name="product_type">
-                    {% for type in product_types %}
-                        <option value="{{ type.id }}" {% if type.id == product.product_type.id %}selected{% endif %}>{{ type.name }}</option>
-                    {% endfor %}
-                </select>
-                <select name="manufacturer">
-                    <option value="">-</option>
-                    {% for manufacturer in manufacturers %}
-                        <option value="{{ manufacturer.id }}" {% if manufacturer.id == product.manufacturer.id %}selected{% endif %}>{{ manufacturer.name }}</option>
-                    {% endfor %}
-                </select>
-                <input type="hidden" name="action" value="update_product">
-                <button type="submit">Обновить</button>
-            </form>
-        </td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="6">Товаров нет.</td></tr>
-    {% endfor %}
-</table>
+      <form method="post" class="product-form product-row">{% csrf_token %}<input type="hidden" name="action" value="update_product"><input type="hidden" name="product_id" value="{{ product.id }}">
+        <div class="product-identity"><span class="product-avatar">📦</span><div><strong>#{{ product.id }}</strong><small>Остаток: {{ product.stock }}</small></div></div>
+        <label>Название<input required name="name" value="{{ product.name }}"></label>
+        <label>Цена<input required type="number" min="0.01" name="price" value="{{ product.price|stringformat:'s' }}" step="0.01"></label>
+        <label>Единица<select name="unit_of_measurement">{% for value,label in product.UNIT_CHOICES %}<option value="{{ value }}" {% if product.unit_of_measurement == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+        <label>Тип<select name="product_type">{% for type in product_types %}<option value="{{ type.id }}" {% if type.id == product.product_type_id %}selected{% endif %}>{{ type.name }}</option>{% endfor %}</select></label>
+        <label>Производитель<select name="manufacturer"><option value="">Не указан</option>{% for manufacturer in manufacturers %}<option value="{{ manufacturer.id }}" {% if product.manufacturer_id == manufacturer.id %}selected{% endif %}>{{ manufacturer.name }}</option>{% endfor %}</select></label>
+        <button class="btn btn-small btn-primary" type="submit">Сохранить</button>
+      </form>
+    {% empty %}<p class="empty-state">Каталог пока пуст.</p>{% endfor %}
+    </div>
+  </section>
 
-<!-- Добавление нового товара -->
-<h3>Добавить товар</h3>
-<form method="post" action="{% url 'delivery_app:employee_products' %}">
-    {% csrf_token %}
-    <input type="text" name="name" placeholder="Название">
-    <input type="number" name="price" placeholder="Цена" step="0.01">
-    <input type="text" name="unit_of_measurement" placeholder="Ед. измерения">
-    <select name="product_type">
-        <option value="">Выберите тип</option>
-        {% for type in product_types %}
-            <option value="{{ type.id }}">{{ type.name }}</option>
-        {% endfor %}
-    </select>
-    <select name="manufacturer">
-        <option value="">-</option>
-        {% for manufacturer in manufacturers %}
-            <option value="{{ manufacturer.id }}">{{ manufacturer.name }}</option>
-        {% endfor %}
-    </select>
-    <input type="hidden" name="action" value="update_product">
-    <button type="submit">Добавить</button>
-</form>
-
-<h3>Типы товаров</h3>
-<table border="1">
-    <tr>
-        <th>Название</th>
-        <th>Действия</th>
-    </tr>
-    {% for type in product_types %}
-    <tr>
-        <td>{{ type.name }}</td>
-        <td>
-            <form method="post" action="{% url 'delivery_app:employee_products' %}">
-                {% csrf_token %}
-                <input type="hidden" name="product_type_id" value="{{ type.id }}">
-                <input type="text" name="name" value="{{ type.name }}">
-                <input type="hidden" name="action" value="update_product_type">
-                <button type="submit">Обновить</button>
-            </form>
-        </td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="2">Типов товаров нет.</td></tr>
-    {% endfor %}
-</table>
-
-<h3>Добавить тип товара</h3>
-<form method="post" action="{% url 'delivery_app:employee_products' %}">
-    {% csrf_token %}
-    <input type="text" name="name" placeholder="Название типа">
-    <input type="hidden" name="action" value="update_product_type">
-    <button type="submit">Добавить</button>
-</form>
+  <section class="editor-card"><div class="section-title"><div><h2>Типы товаров</h2><p>Используются в фильтрах каталога и отчётах.</p></div></div>
+    <form method="post" class="type-add">{% csrf_token %}<input type="hidden" name="action" value="update_product_type"><input required name="name" placeholder="Новый тип товара"><button class="btn btn-primary" type="submit">Добавить</button></form>
+    <div class="type-grid">{% for type in product_types %}<form method="post" class="type-item">{% csrf_token %}<input type="hidden" name="action" value="update_product_type"><input type="hidden" name="product_type_id" value="{{ type.id }}"><input required name="name" value="{{ type.name }}"><button class="btn btn-small btn-outline" type="submit">Сохранить</button></form>{% empty %}<p>Типов пока нет.</p>{% endfor %}</div>
+  </section>
+</section>
+<style>
+.catalog-admin{padding:18px 0 54px}.catalog-heading{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:18px;margin-bottom:22px;padding:24px;border:1px solid #dce8f3;border-radius:18px;background:linear-gradient(135deg,#fff 0%,#eef7ff 100%);box-shadow:0 16px 45px rgba(31,56,88,.08)}.catalog-heading span{color:#1f7a4b;font-size:.77rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.catalog-heading h1{margin:.25rem 0;text-transform:none;color:#17395d;line-height:1.1}.catalog-heading p{margin:0;color:#5f7085}.catalog-heading .btn{min-width:132px}.editor-card{background:#fff;border:1px solid #dfe7ef;border-radius:17px;padding:20px;margin-bottom:18px;box-shadow:0 9px 30px rgba(31,56,88,.07)}details.editor-card summary{font-size:1.12rem;font-weight:750;color:#1e3d6f;cursor:pointer}.section-title{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:15px}.section-title h2{font-size:1.22rem;text-transform:none;margin:0;color:#18324e}.section-title p{font-size:.85rem;margin:2px 0;color:#66758a}.section-title>span{flex:0 0 auto;background:#eef4fb;border-radius:999px;padding:5px 9px;font-size:.8rem}.product-form label{font-size:.74rem;font-weight:700;color:#536579}.product-form input,.product-form select,.type-item input,.type-add input{display:block;width:100%;min-height:41px;margin-top:4px;border:1px solid #ccd8e4;border-radius:8px;background:#fff;padding:8px 10px;color:#24364b}.add-form{display:grid;grid-template-columns:minmax(180px,2fr) minmax(110px,1fr) minmax(130px,1fr) minmax(150px,1.4fr) minmax(150px,1.4fr) minmax(150px,auto);gap:10px;align-items:end;margin-top:16px}.product-row{display:grid;grid-template-columns:100px minmax(160px,1.6fr) minmax(110px,.7fr) minmax(120px,1fr) minmax(145px,1.15fr) minmax(145px,1.2fr) minmax(118px,auto);gap:10px;align-items:end;padding:14px 0;border-bottom:1px solid #edf1f5}.product-row:last-child{border-bottom:0}.product-identity{display:flex;gap:8px;align-items:center;padding-bottom:4px}.product-avatar{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;border-radius:10px;background:#eef4fb}.product-identity small{display:block;color:#718096;font-size:.72rem}.type-add{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;margin-bottom:14px}.type-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.type-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;background:#f8fafc;border-radius:10px;padding:9px}.type-item input{margin:0}.empty-state{text-align:center;padding:35px;color:#66758a}@media(max-width:1180px){.add-form{grid-template-columns:repeat(3,minmax(0,1fr))}.product-row{grid-template-columns:100px repeat(3,minmax(0,1fr))}.product-row button{width:100%}}@media(max-width:760px){.catalog-heading{grid-template-columns:1fr;align-items:start;padding:18px}.catalog-heading .btn{width:100%}.add-form,.product-row,.type-grid{grid-template-columns:1fr 1fr}.product-identity{grid-column:1/-1}.editor-card{padding:15px}.section-title{flex-direction:column}.type-item{grid-template-columns:1fr}.type-item .btn{width:100%}}@media(max-width:520px){.add-form,.product-row,.type-grid,.type-add{grid-template-columns:1fr}}
+</style>
+<style>
+.catalog-admin{overflow:hidden}.catalog-heading{grid-template-columns:minmax(0,1fr) max-content;max-width:100%;overflow:hidden}.catalog-heading>div{min-width:0}.catalog-heading h1{overflow-wrap:anywhere}.catalog-heading .btn{justify-self:end}@media(max-width:760px){.catalog-heading{grid-template-columns:1fr}.catalog-heading .btn{justify-self:stretch}}
+</style>
 {% endblock %}

@@ -1,0 +1,13 @@
+.git
+.gitignore
+.env
+.edge-*
+__pycache__
+*.py[cod]
+*.log
+db.sqlite3
+media
+staticfiles
+venv
+.pytest_cache
+.coverage

@@ -1,0 +1,14 @@
+.env
+*.log
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+staticfiles/
+db.sqlite3
+media/
+media/CACHE/
+seed-data.json
+*-check.png
+venv/
+.agents/

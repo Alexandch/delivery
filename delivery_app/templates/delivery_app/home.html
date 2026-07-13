@@ -6,69 +6,8 @@
 {% endblock %}
 
 {% block content %}
-<div class="preloader" id="preloader">
-    <div class="preloader-container">
-        <div class="basket-preloader">
-            <div class="basket-body"></div>
-            <div class="basket-handle"></div>
-            <div class="wheel wheel-left">
-                <div class="wheel-progress"></div>
-                <div class="wheel-hub"></div>
-            </div>
-            <div class="wheel wheel-right">
-                <div class="wheel-progress"></div>
-                <div class="wheel-hub"></div>
-            </div>
-            <div class="progress-bars">
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: 70%"></div>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: 40%"></div>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: 85%"></div>
-                </div>
-            </div>
-        </div>
-        <div class="preloader-text">Загружаем свежие продукты...</div>
-    </div>
-</div>
 
-<!-- Анимационная сцена -->
-<div class="animation-scene" id="animationScene">
-    <div class="sky"></div>
-    <div class="clouds">
-        <div class="cloud cloud-1"></div>
-        <div class="cloud cloud-2"></div>
-    </div>
-    <div class="products-animation">
-        <div class="product-item product-1">🥑</div>
-        <div class="product-item product-2">🍎</div>
-        <div class="product-item product-3">🥖</div>
-        <div class="product-item product-4">🥛</div>
-        <div class="product-item product-5">🍓</div>
-    </div>
-    <div class="basket-center" id="basketCenter">
-        <div class="basket-body-anim"></div>
-        <div class="basket-handle-anim"></div>
-        <div class="wheel-anim wheel-left-anim"></div>
-        <div class="wheel-anim wheel-right-anim"></div>
-    </div>
-    <div class="main-cloud" id="mainCloud">
-    </div>
-    <div class="ground">
-        <div class="lawn"></div>
-        <div class="house">
-            <div class="house-body"></div>
-            <div class="house-roof"></div>
-            <div class="house-door"></div>
-            <div class="house-window"></div>
-        </div>
-    </div>
-</div>
-
-<div class="main-content" id="mainContent" style="display: none;">
+<div class="main-content" id="mainContent">
 
 <section class="hero-section">
     <div class="hero-content">
@@ -86,7 +25,7 @@
     </div>
 </section>
 
-<!-- Слайдер с настройками -->
+
 <section class="slider-section">
     <div class="container">
         <div class="slider-header">
@@ -105,12 +44,12 @@
         </div>
         
         <div class="slider-container" id="main-slider">
-            <!-- Слайды будут созданы через JavaScript -->
+            
         </div>
     </div>
 </section>
 
-<!-- Популярные товары -->
+
 <section class="featured-products">
     <div class="container">
         <div class="section-header">
@@ -123,7 +62,7 @@
             <div class="product-card">
                 <div class="product-image">
                     {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                    <img src="{{ product.image_thumbnail.url }}" alt="{{ product.name }}" loading="lazy" decoding="async">
                     {% else %}
                     <img src="{% static 'delivery_app/images/product-placeholder.jpg' %}" alt="{{ product.name }}">
                     {% endif %}
@@ -161,7 +100,7 @@
     </div>
 </section>
 
-<!-- Последняя новость -->
+
 <section class="latest-news">
     <div class="container">
         <div class="section-header">
@@ -209,7 +148,7 @@
     </div>
 </section>
 
-<!-- Партнеры -->
+
 <section class="partners-section">
     <div class="container">
         <div class="section-header">
@@ -241,49 +180,51 @@
     </div>
 </section>
 
-<!-- Информационные виджеты -->
+
 <section class="info-widgets">
     <div class="container">
         <div class="widgets-grid">
-            <!-- Погода -->
+            
             <div class="info-card">
                 <div class="card-header">
                     <h3>Погода в {{ weather_data.city }}</h3>
-                    <span class="weather-icon">🌤️</span>
+                    <span class="widget-icon widget-weather" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M7.5 18a5.5 5.5 0 0 1-.4-11 7 7 0 0 1 13.4 3.1A4.5 4.5 0 0 1 19.5 19h-12zm0-2h12a2.5 2.5 0 0 0 .1-5l-1-.1-.1-1A5 5 0 0 0 8.9 8.2l-.4.9-1-.1A3.5 3.5 0 0 0 7.5 16z"/></svg>
+                    </span>
                 </div>
                 <div class="card-content">
-                    {% if weather_data.temperature != 'N/A' and weather_data.description != 'N/A' %}
                     <div class="weather-temp">{{ weather_data.temperature }}°C</div>
                     <div class="weather-desc">{{ weather_data.description }}</div>
-                    {% else %}
-                    <div class="weather-error">Не удалось получить данные о погоде</div>
-                    {% endif %}
+                    <div class="widget-source">
+                        {% if weather_data.is_fallback %}Показано резервное значение{% else %}Источник: {{ weather_data.source }}{% endif %}
+                    </div>
                 </div>
             </div>
 
-            <!-- Курсы валют -->
+            
             <div class="info-card">
                 <div class="card-header">
                     <h3>Курсы валют</h3>
-                    <span class="currency-icon">💱</span>
+                    <span class="widget-icon widget-currency" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9h-2a7 7 0 1 1-2.1-5H14v2h6V3h-2v2.1A9 9 0 0 0 12 3zm-1 4v2.1A3 3 0 0 0 8 12c0 1.7 1.3 2.4 3.5 2.9 1.3.3 1.5.6 1.5 1.1 0 .6-.5 1-1.5 1A4.8 4.8 0 0 1 8.7 16l-.9 1.8c.8.5 1.8.9 3.2 1V21h2v-2.2a3.1 3.1 0 0 0 3-3c0-1.9-1.5-2.5-3.7-3-1.2-.3-1.3-.6-1.3-1s.4-.9 1.3-.9c.8 0 1.6.2 2.4.7l.8-1.8A5.1 5.1 0 0 0 13 9.1V7h-2z"/></svg>
+                    </span>
                 </div>
                 <div class="card-content">
-                    {% if exchange_data.usd != 'N/A' and exchange_data.eur != 'N/A' %}
                     <div class="currency-row">
-                        <span>USD:</span>
-                        <span>{{ exchange_data.usd|default:'N/A' }}</span>
+                        <span>1 USD</span>
+                        <strong>{{ exchange_data.usd|floatformat:4 }} BYN</strong>
                     </div>
                     <div class="currency-row">
-                        <span>EUR:</span>
-                        <span>{{ exchange_data.eur|default:'N/A' }}</span>
+                        <span>1 EUR</span>
+                        <strong>{{ exchange_data.eur|floatformat:4 }} BYN</strong>
                     </div>
-                    {% else %}
-                    <div class="currency-error">Не удалось получить данные о курсах</div>
-                    {% endif %}
+                    <div class="widget-source">
+                        {% if exchange_data.is_fallback %}Показано резервное значение{% else %}Источник: {{ exchange_data.source }}{% endif %}
+                    </div>
                 </div>
             </div>
 
-            <!-- Календарь -->
+            
             <div class="info-card">
                 <div class="card-header">
                     <h3>Календарь</h3>
@@ -323,7 +264,7 @@
     </div>
 </section>
 
-<!-- Преимущества -->
+
 <section class="benefits-section">
     <div class="container">
         <div class="section-header">
@@ -361,22 +302,38 @@
 </div>
 
 <style>
-    /* Стили для прелоадера */
+    
     .preloader {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: linear-gradient(135deg, #87CEEB, #98FB98);
+        background: rgba(240, 248, 255, 0.94);
+        backdrop-filter: blur(8px);
         display: flex;
         justify-content: center;
         align-items: center;
         z-index: 9999;
+        opacity: 1;
+        visibility: visible;
+        transition: opacity .32s ease, visibility .32s ease;
+    }
+
+    .preloader.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
     }
 
     .preloader-container {
         text-align: center;
+        min-width: 260px;
+        padding: 28px 32px;
+        background: rgba(255,255,255,.9);
+        border: 1px solid rgba(44,90,160,.12);
+        border-radius: 22px;
+        box-shadow: 0 18px 55px rgba(30,61,111,.15);
     }
 
     .basket-preloader {
@@ -384,6 +341,7 @@
         width: 120px;
         height: 100px;
         margin: 0 auto 20px;
+        animation: basket-float 1.4s ease-in-out infinite;
     }
 
     .basket-body {
@@ -392,8 +350,8 @@
         left: 20px;
         width: 80px;
         height: 50px;
-        background: #8B4513;
-        border-radius: 5px 5px 0 0;
+        background: linear-gradient(135deg, #4CAF50, #2f855a);
+        border-radius: 8px 8px 14px 14px;
     }
 
     .basket-handle {
@@ -402,14 +360,14 @@
         left: 30px;
         width: 60px;
         height: 20px;
-        border: 8px solid #8B4513;
+        border: 7px solid #2f855a;
         border-bottom: none;
         border-radius: 30px 30px 0 0;
     }
 
     .wheel {
         position: absolute;
-        bottom: 0;
+        bottom: 8px;
         width: 25px;
         height: 25px;
         background: #333;
@@ -418,11 +376,11 @@
     }
 
     .wheel-left {
-        left: 15px;
+        left: 27px;
     }
 
     .wheel-right {
-        right: 15px;
+        right: 27px;
     }
 
     .wheel-progress {
@@ -447,10 +405,7 @@
     }
 
     .progress-bars {
-        position: absolute;
-        top: -40px;
-        left: 0;
-        width: 100%;
+        display: none;
     }
 
     .progress-bar {
@@ -476,7 +431,17 @@
         animation: text-pulse 1.5s ease-in-out infinite;
     }
 
-    /* Анимационная сцена */
+    @keyframes basket-float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-7px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .basket-preloader, .wheel-progress, .preloader-text { animation: none !important; }
+        .preloader { transition: none; }
+    }
+
+    
     .animation-scene {
         position: fixed;
         top: 0;
@@ -498,7 +463,7 @@
         background: linear-gradient(180deg, #87CEEB 0%, #B0E2FF 100%);
     }
 
-    /* Фоновые облака */
+    
     .clouds {
         position: absolute;
         top: 20%;
@@ -550,7 +515,7 @@
         right: 20px;
     }
 
-    /* Корзина в центре */
+    
     .basket-center {
         position: absolute;
         top: 40%;
@@ -561,7 +526,7 @@
         z-index: 10;
     }
 
-    /* Основное облако */
+    
     .main-cloud {
         position: absolute;
         bottom: -100px;
@@ -597,7 +562,7 @@
         right: 30px;
     }
 
-    /* Корзина на облаке */
+    
     .basket-on-cloud {
         position: absolute;
         top: 40%;
@@ -607,7 +572,7 @@
         height: 60px;
     }
 
-    /* Общие стили для корзины */
+    
     .basket-body-anim {
         position: absolute;
         bottom: 0;
@@ -642,7 +607,7 @@
     .wheel-left-anim { left: 5px; }
     .wheel-right-anim { right: 5px; }
 
-    /* Продукты */
+    
     .products-animation {
         position: absolute;
         top: 0;
@@ -678,7 +643,7 @@
         animation-delay: 5s; 
     }
 
-    /* Земля */
+    
     .ground {
         position: absolute;
         bottom: 0;
@@ -742,7 +707,7 @@
         border: 2px solid #4682B4;
     }
 
-    /* АНИМАЦИИ */
+    
     @keyframes wheel-spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
@@ -763,7 +728,7 @@
         100% { transform: translateX(calc(100vw + 100px)); }
     }
 
-    /* Подлет облака к корзине */
+    
     @keyframes cloud-approach {
         0% {
             bottom: -100px;
@@ -779,7 +744,7 @@
         }
     }
 
-    /* Падение продуктов в корзину */
+    
     @keyframes product-to-basket {
         0% {
             transform: translateX(-50%) translateY(0) rotate(0deg) scale(0.5);
@@ -803,7 +768,7 @@
         }
     }
 
-    /* Опускание облака с корзиной на лужайку */
+    
     @keyframes cloud-landing {
         0% {
             bottom: 55%;
@@ -815,7 +780,7 @@
         }
     }
 
-    /* Общие стили */
+    
     .container {
         max-width: 1200px;
         margin: 0 auto;
@@ -843,7 +808,7 @@
         font-weight: 500;
     }
 
-    /* Кнопки */
+    
     .btn {
         display: inline-block;
         padding: 10px 20px;
@@ -889,7 +854,7 @@
         font-size: 1.1em;
     }
 
-    /* Герой-секция */
+    
     .hero-section {
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         padding: 60px 0;
@@ -936,7 +901,7 @@
         height: auto;
     }
 
-    /* Баннеры */
+    
     .banner-section {
         padding: 40px 0;
     }
@@ -980,7 +945,7 @@
         font-size: 1.1em;
     }
 
-    /* Товары */
+    
     .featured-products {
         padding: 60px 0;
         background-color: #f8f9fa;
@@ -1104,7 +1069,7 @@
         text-align: center;
     }
 
-    /* Новости */
+    
     .latest-news {
         padding: 60px 0;
         position: relative;
@@ -1166,7 +1131,7 @@
         text-indent: 1.5em;
     }
 
-    /* Псевдоэлемент для первой буквы */
+    
     .news-excerpt::first-letter {
         font-size: 2em;
         font-weight: bold;
@@ -1176,7 +1141,7 @@
         font-family: 'Georgia', serif;
     }
 
-    /* Партнеры */
+    
     .partners-section {
         padding: 60px 0;
         background-color: #f8f9fa;
@@ -1202,7 +1167,7 @@
         position: relative;
     }
 
-    /* Круг для логотипа/названия */
+    
     .partner-card a {
         display: flex;
         flex-direction: column;
@@ -1260,7 +1225,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
         display: -webkit-box;
-        -webkit-line-clamp: 3;/*ограничение 3 строки*/
+        -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
     }
 
@@ -1290,7 +1255,7 @@
         margin-bottom: 20px;
     }
 
-    /* Информационные виджеты */
+    
     .info-widgets {
         padding: 60px 0;
     }
@@ -1319,13 +1284,40 @@
 
     .card-header h3 {
         margin: 0;
-        color: #a6c8fc;
+        color: #18324e;
     }
 
-    .weather-icon,
-    .currency-icon,
+    .widget-icon {
+        display: inline-grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        color: #fff;
+    }
+
+    .widget-icon svg {
+        width: 23px;
+        height: 23px;
+        fill: currentColor;
+    }
+
+    .widget-weather {
+        background: linear-gradient(135deg, #38bdf8, #2c5aa0);
+    }
+
+    .widget-currency {
+        background: linear-gradient(135deg, #36a86b, #18794e);
+    }
+
     .calendar-icon {
-        font-size: 1.5em;
+        display: inline-grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: #eef5fb;
+        font-size: 1.35em;
     }
 
     .weather-temp {
@@ -1337,18 +1329,28 @@
 
     .weather-desc {
         color: #6c757d;
+        text-transform: capitalize;
     }
 
-    .weather-error,
-    .currency-error {
-        color: #dc3545;
+    .widget-source {
+        margin-top: 10px;
+        color: #64748b;
+        font-size: .82rem;
     }
 
     .currency-row {
         display: flex;
         justify-content: space-between;
+        align-items: center;
+        gap: 12px;
         margin-bottom: 8px;
-        padding: 5px 0;
+        padding: 8px 0;
+        color: #475569;
+    }
+
+    .currency-row strong {
+        color: #18324e;
+        font-size: 1.05rem;
     }
 
     .currency-row:not(:last-child) {
@@ -1385,7 +1387,7 @@
         background-color: #f8f9fa;
     }
 
-    /* Преимущества */
+    
     .benefits-section {
         padding: 60px 0;
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -1512,7 +1514,7 @@
         text-align: center;
     }
 
-    /* Кавычки в зависимости от языка */
+    
     [lang="ru"] q {
         quotes: "«" "»" "„" "“";
     }
@@ -1521,14 +1523,14 @@
         quotes: "“" "”" "‘" "’";
     }
 
-    /* Стили для заблокированных элементов */
+    
     .btn:disabled {
         background-color: #6c757d;
         cursor: not-allowed;
         opacity: 0.6;
     }
 
-    /* Стили для обязательных полей */
+    
     .subscribe-form input:required {
         background-image: linear-gradient(45deg, transparent 90%, #ff9800 90%);
         background-size: 10px 10px;
@@ -1536,7 +1538,7 @@
         background-position: right top;
     }
 
-    /* Стили для слайдера */
+    
 .slider-section {
     padding: 40px 0;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -1587,11 +1589,13 @@
     margin-right: 5px;
 }
 
-/* Контейнер слайдера */
+
 .slider-container {
     position: relative;
     width: 100%;
-    height: 400px;
+    height: auto;
+    aspect-ratio: 4 / 1;
+    min-height: 260px;
     overflow: hidden;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
@@ -1613,6 +1617,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 }
 
 .slide-caption {
@@ -1648,7 +1653,7 @@
     text-decoration: none;
 }
 
-/* Элементы управления слайдером */
+
 .slider-nav {
     position: absolute;
     top: 50%;
@@ -1729,7 +1734,7 @@
     backdrop-filter: blur(10px);
 }
 
-/* Адаптивность слайдера */
+
 @media (max-width: 768px) {
     .slider-container {
         height: 300px;
@@ -1791,103 +1796,83 @@
         font-size: 0.9em;
     }
 }
+[data-theme="dark"] .hero-section,
+[data-theme="dark"] .slider-section,
+[data-theme="dark"] .featured-products,
+[data-theme="dark"] .latest-news,
+[data-theme="dark"] .partners-section {
+    background: #171a1f !important;
+    color: #f4f7fb !important;
+}
+
+[data-theme="dark"] .hero-content,
+[data-theme="dark"] .slider-header,
+[data-theme="dark"] .section-header,
+[data-theme="dark"] .product-card,
+[data-theme="dark"] .news-card,
+[data-theme="dark"] .partner-card {
+    background: #242932 !important;
+    border-color: #3b4656 !important;
+    color: #f4f7fb !important;
+}
+
+[data-theme="dark"] .hero-text h1,
+[data-theme="dark"] .slider-header h2,
+[data-theme="dark"] .section-header h2,
+[data-theme="dark"] .product-title,
+[data-theme="dark"] .news-title {
+    color: #f4f7fb !important;
+}
+
+[data-theme="dark"] .hero-text p,
+[data-theme="dark"] .section-header p,
+[data-theme="dark"] .product-description,
+[data-theme="dark"] .news-excerpt,
+[data-theme="dark"] .slider-controls-panel label,
+[data-theme="dark"] .control-group label {
+    color: #c7d2e3 !important;
+}
+
+[data-theme="dark"] #slider-delay {
+    background: #171d26 !important;
+    border-color: #465366 !important;
+    color: #f4f7fb !important;
+}
 </style>
 
 <script>
-    // Базовый скрипт для демонстрации работы прелоадера и анимации
-    // В реальном проекте здесь будет логика загрузки ресурсов
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        // Симуляция загрузки страницы
-        setTimeout(function() {
-            // Скрыть прелоадер
-            document.getElementById('preloader').style.display = 'none';
-            
-            // Показать анимационную сцену
-            const animationScene = document.getElementById('animationScene');
-            animationScene.style.display = 'block';
-            
-            // Последовательность анимаций
-            setTimeout(function() {
-                // После того как облако подлетело к корзине, добавляется корзина на облако
-                const mainCloud = document.getElementById('mainCloud');
-                
-                // Создание корзины на облаке
-                const basketOnCloud = document.createElement('div');
-                basketOnCloud.className = 'basket-on-cloud';
-                basketOnCloud.innerHTML = `
-                    <div class="basket-body-anim"></div>
-                    <div class="basket-handle-anim"></div>
-                    <div class="wheel-anim wheel-left-anim"></div>
-                    <div class="wheel-anim wheel-right-anim"></div>
-                `;
-                
-                // Добавление корзины на облако
-                mainCloud.appendChild(basketOnCloud);
-                
-                // Скрыть корзину в центре
-                document.getElementById('basketCenter').style.display = 'none';
-                
-                // Запуск анимации опускания облака с корзиной на лужайку
-                mainCloud.style.animation = 'cloud-landing 4s ease-in-out forwards';
-                
-                // После завершения анимации отображение контента
-                setTimeout(function() {
-                    animationScene.style.opacity = '0';
-                    setTimeout(function() {
-                        animationScene.style.display = 'none';
-                        document.getElementById('mainContent').style.display = 'block';
-                        
-                        // Плавное появление основного контента
-                        document.getElementById('mainContent').style.opacity = '0';
-                        document.getElementById('mainContent').style.transition = 'opacity 1s ease-in';
-                        setTimeout(function() {
-                            document.getElementById('mainContent').style.opacity = '1';
-                        }, 100);
-                    }, 1000);
-                }, 4000); // Время анимации опускания облака
-            }, 10000); // Общее время до начала опускания (прелоадер + продукты + подлет облака)
-        }, 3000); // Время показа прелоадера
+    document.addEventListener('DOMContentLoaded', function () {
+        const preloader = document.getElementById('preloader');
+        if (!preloader) return;
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const alreadySeen = sessionStorage.getItem('homePreloaderSeen') === '1';
+        const hidePreloader = () => {
+            preloader.classList.add('is-hidden');
+            sessionStorage.setItem('homePreloaderSeen', '1');
+            window.setTimeout(() => preloader.remove(), reduceMotion ? 0 : 350);
+        };
+        if (reduceMotion || alreadySeen) {
+            hidePreloader();
+            return;
+        }
+        window.addEventListener('load', () => window.setTimeout(hidePreloader, 350), { once: true });
+        window.setTimeout(hidePreloader, 1200);
     });
 
-    // Функция для добавления товара в корзину
     document.querySelectorAll('.add-to-cart').forEach(button => {
         button.addEventListener('click', function () {
             const productId = this.dataset.productId;
-            // Здесь будет код для добавления товара в корзину
             alert('Товар добавлен в корзину!');
         });
     });
 
-    // Функция для быстрого просмотра товара
     document.querySelectorAll('.quick-view').forEach(button => {
         button.addEventListener('click', function () {
             const productId = this.dataset.productId;
-            // Здесь будет код для быстрого просмотра товара
             alert('Быстрый просмотр товара #' + productId);
         });
     });
 
-    // Изменение курсора при наведении
-    document.querySelectorAll('.btn').forEach(button => {
-        button.addEventListener('mouseenter', function () {
-            this.style.cursor = 'grab';
-        });
-
-        button.addEventListener('mouseleave', function () {
-            this.style.cursor = 'pointer';
-        });
-
-        button.addEventListener('mousedown', function () {
-            this.style.cursor = 'grabbing';
-        });
-
-        button.addEventListener('mouseup', function () {
-            this.style.cursor = 'grab';
-        });
-    });
-
-    // Класс для слайдера с полным функционалом
 class ImageSlider {
     constructor(container, options = {}) {
         this.container = container;
@@ -1908,15 +1893,12 @@ class ImageSlider {
     }
     
     init() {
-        // Создаем структуру слайдера
         this.container.innerHTML = '';
         
-        // Трек слайдов
         this.track = document.createElement('div');
         this.track.className = 'slider-track';
         this.container.appendChild(this.track);
         
-        // слайды
         this.slides.forEach((slide, index) => {
             const slideElement = document.createElement('div');
             slideElement.className = 'slide';
@@ -1957,7 +1939,6 @@ class ImageSlider {
             this.track.appendChild(slideElement);
         });
         
-        // Создание навигационных кнопки
         if (this.showNavs) {
             this.prevButton = document.createElement('button');
             this.prevButton.className = 'slider-nav prev';
@@ -1974,7 +1955,6 @@ class ImageSlider {
             this.container.appendChild(this.nextButton);
         }
         
-        // Создание пагинацию
         if (this.showPags) {
             this.pagination = document.createElement('div');
             this.pagination.className = 'slider-pagination';
@@ -1990,13 +1970,11 @@ class ImageSlider {
             });
         }
         
-        // Создаем счетчик слайдов
         this.counter = document.createElement('div');
         this.counter.className = 'slider-counter';
         this.updateCounter();
         this.container.appendChild(this.counter);
         
-        // Обработчики для паузы при наведении
         if (this.stopOnHover) {
             this.container.addEventListener('mouseenter', () => {
                 this.isPaused = true;
@@ -2011,10 +1989,8 @@ class ImageSlider {
             });
         }
         
-        // Обработчики для касаний (мобильные устройства)
         this.setupTouchEvents();
         
-        // Запускаем автоплеер если нужно
         if (this.autoPlay) {
             this.startAutoPlay();
         }
@@ -2051,7 +2027,6 @@ class ImageSlider {
         this.isAnimating = true;
         this.track.style.transform = `translateX(-${this.currentIndex * 100}%)`;
         
-        // Обновляем активную точку пагинации
         if (this.showPags) {
             const dots = this.pagination.querySelectorAll('.pagination-dot');
             dots.forEach((dot, index) => {
@@ -2059,10 +2034,8 @@ class ImageSlider {
             });
         }
         
-        // Обновляем счетчик
         this.updateCounter();
         
-        // Сбрасываем флаг анимации после завершения перехода
         setTimeout(() => {
             this.isAnimating = false;
         }, 600);
@@ -2148,12 +2121,10 @@ class ImageSlider {
         
         if (options.stopOnHover !== undefined) {
             this.stopOnHover = options.stopOnHover;
-            // Удаление существующих обработчиков
             this.container.removeEventListener('mouseenter', this.mouseEnterHandler);
             this.container.removeEventListener('mouseleave', this.mouseLeaveHandler);
             
             if (this.stopOnHover) {
-                // Добав обработчики
                 this.container.addEventListener('mouseenter', () => {
                     this.isPaused = true;
                     this.clearAutoPlay();
@@ -2170,7 +2141,6 @@ class ImageSlider {
     }
 }
 
-// Данные для слайдов
 const slidesData = [
     {
         image: '{% static 'delivery_app/images/banner1.svg' %}',
@@ -2204,7 +2174,6 @@ const slidesData = [
     }
 ];
 
-// Инициализация слайдера после загрузки DOM
 document.addEventListener('DOMContentLoaded', function() {
     const sliderContainer = document.getElementById('main-slider');
     const slider = new ImageSlider(sliderContainer, {
@@ -2217,13 +2186,11 @@ document.addEventListener('DOMContentLoaded', function() {
         stopOnHover: true
     });
     
-    // Элементы управления
     const delayInput = document.getElementById('slider-delay');
     const loopToggle = document.getElementById('slider-loop');
     const autoToggle = document.getElementById('slider-auto');
     const hoverToggle = document.getElementById('slider-hover');
     
-    // Обработчики изменений настроек
     delayInput.addEventListener('change', function() {
         const delay = parseInt(this.value);
         if (delay >= 2 && delay <= 30) {
@@ -2246,7 +2213,6 @@ document.addEventListener('DOMContentLoaded', function() {
         slider.updateOptions({ stopOnHover: this.checked });
     });
     
-    // Добавляем обработчики клавиатуры для доступности
     document.addEventListener('keydown', function(e) {
         if (e.key === 'ArrowLeft') {
             slider.prev();

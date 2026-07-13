@@ -1,37 +1,49 @@
 {% extends "delivery_app/base.html" %}
-
-{% block title %}
-Оплата заказа
-{% endblock %}
-
+{% block title %}Оплата заказа #{{ order.id }}{% endblock %}
 {% block content %}
-<h2>Оплата заказа #{{ order.id }}</h2>
-<p>Сумма к оплате: {{ order.total_cost }} BYN</p>
-
-{% if messages %}
-    <ul>
-        {% for message in messages %}
-            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
-        {% endfor %}
-    </ul>
-{% endif %}
-
-<form method="post">
-    {% csrf_token %}
-    <div>
-        <label for="card_number">Номер карты:</label>
-        <input type="text" id="card_number" name="card_number" placeholder="0000 0000 0000 0000" required>
+<section class="payment-page">
+    <div class="payment-card">
+        <div class="payment-heading">
+            <span class="payment-badge">Безопасная оплата</span>
+            <h1>Заказ #{{ order.id }}</h1>
+            <p>К оплате</p><strong class="payment-amount">{{ order.total_cost|floatformat:2 }} BYN</strong>
+        </div>
+        {% if payment_provider == 'demo' %}
+        <div class="demo-notice"><strong>Учебный режим.</strong> Используйте тестовую карту 4242 4242 4242 4242, будущую дату и любой трёхзначный CVV. Реальные деньги не списываются.</div>
+        {% endif %}
+        <form method="post" class="card-form" id="card-payment-form" novalidate>
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="card_number">Номер карты <span id="card-brand">{{ entered_brand }}</span></label>
+                <input class="form-control" inputmode="numeric" autocomplete="cc-number" maxlength="23"
+                       id="card_number" name="card_number" placeholder="0000 0000 0000 0000" required>
+            </div>
+            <div class="card-row">
+                <div class="form-group"><label for="expiry_date">Срок действия</label><input class="form-control" inputmode="numeric" autocomplete="cc-exp" maxlength="5" id="expiry_date" name="expiry_date" placeholder="ММ/ГГ" required></div>
+                <div class="form-group"><label for="cvv">CVV</label><input class="form-control" type="password" inputmode="numeric" autocomplete="cc-csc" maxlength="4" id="cvv" name="cvv" placeholder="•••" required></div>
+            </div>
+            <button class="btn btn-primary pay-button" type="submit">Оплатить {{ order.total_cost|floatformat:2 }} BYN</button>
+            <p class="privacy-note">Реквизиты карты не записываются в базу данных и не попадают в журналы приложения.</p>
+        </form>
+        <a class="back-link" href="{% url 'delivery_app:order_detail' order.id %}">← Вернуться к заказу</a>
     </div>
-    <div>
-        <label for="expiry_date">Срок действия:</label>
-        <input type="text" id="expiry_date" name="expiry_date" placeholder="MM/YY" required>
-    </div>
-    <div>
-        <label for="cvv">CVV:</label>
-        <input type="text" id="cvv" name="cvv" placeholder="123" required>
-    </div>
-    <button type="submit">Оплатить</button>
-</form>
-
-<p><a href="{% url 'delivery_app:order_detail' order.id %}">Вернуться к заказу</a></p>
+</section>
+<style>
+.payment-page{min-height:64vh;display:grid;place-items:center;padding:25px 0 55px}.payment-card{width:min(100%,540px);background:#fff;border:1px solid #dfe7ef;border-radius:22px;padding:30px;box-shadow:0 22px 55px rgba(30,61,111,.14)}.payment-heading{text-align:center;margin-bottom:20px}.payment-heading h1{text-transform:none;margin:8px 0}.payment-heading p{margin:0}.payment-badge{display:inline-block;background:#e8f7ef;color:#18794e;padding:6px 11px;border-radius:999px;font-size:.78rem;font-weight:700}.payment-amount{font-size:2rem;color:#1e3d6f}.demo-notice{background:#fff8e6;border:1px solid #f1d58a;border-radius:12px;padding:12px 14px;font-size:.88rem;margin:18px 0}.card-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}.card-form label{display:flex;justify-content:space-between;font-weight:650;margin-bottom:7px}.pay-button{width:100%;margin-top:6px}.privacy-note{text-align:center;font-size:.8rem;margin:12px 0}.back-link{display:block;text-align:center;margin-top:12px}@media(max-width:520px){.payment-card{padding:21px}.card-row{grid-template-columns:1fr}}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const number = document.getElementById('card_number');
+  const expiry = document.getElementById('expiry_date');
+  const cvv = document.getElementById('cvv');
+  const brand = document.getElementById('card-brand');
+  number.addEventListener('input', () => {
+    const digits = number.value.replace(/\D/g, '').slice(0, 19);
+    number.value = digits.replace(/(.{4})/g, '$1 ').trim();
+    brand.textContent = digits.startsWith('4') ? 'Visa' : (/^5[1-5]/.test(digits) ? 'Mastercard' : '');
+  });
+  expiry.addEventListener('input', () => { const d=expiry.value.replace(/\D/g,'').slice(0,4); expiry.value=d.length>2?`${d.slice(0,2)}/${d.slice(2)}`:d; });
+  cvv.addEventListener('input', () => { cvv.value=cvv.value.replace(/\D/g,'').slice(0,4); });
+});
+</script>
 {% endblock %}
