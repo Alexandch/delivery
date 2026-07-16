@@ -840,13 +840,87 @@
 
 .profile-container .profile-sidebar .card-header h3 {
     white-space: normal !important;
-    overflow-wrap: anywhere !important;
+    overflow-wrap: normal !important;
+    font-size: 1.08rem !important;
+    line-height: 1.25 !important;
+}
+
+.profile-container .profile-content {
+    grid-template-columns: minmax(0, 2fr) minmax(340px, 0.78fr) !important;
+}
+
+.profile-container .profile-form-section,
+.profile-container .profile-sidebar,
+.profile-container .profile-sidebar .card {
+    min-width: 0 !important;
+}
+
+.profile-container .profile-sidebar .card-body {
+    overflow-x: auto !important;
+}
+
+.profile-container .profile-sidebar .calendar-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+}
+
+.profile-container .profile-sidebar .calendar-table th,
+.profile-container .profile-sidebar .calendar-table td {
+    width: 14.285% !important;
+    min-width: 0 !important;
+    padding: 10px 4px !important;
+}
+
+.profile-container .profile-sidebar .calendar-table td.today::after {
+    font-size: 7px !important;
+    bottom: 3px !important;
+}
+
+[data-theme="dark"] .profile-container .profile-avatar,
+[data-theme="dark"] .profile-container .profile-form-section .card,
+[data-theme="dark"] .profile-container .profile-sidebar .card,
+[data-theme="dark"] .profile-container .country-info .info-card {
+    background: #242932 !important;
+    border: 1px solid #3d4859 !important;
+    color: #f4f7fb !important;
+}
+
+[data-theme="dark"] .profile-container .profile-title h1,
+[data-theme="dark"] .profile-container .card-header h2,
+[data-theme="dark"] .profile-container .card-header h3,
+[data-theme="dark"] .profile-container .form-label,
+[data-theme="dark"] .profile-container .stat-number {
+    color: #f8fafc !important;
+}
+
+[data-theme="dark"] .profile-container .profile-subtitle,
+[data-theme="dark"] .profile-container .stat-label,
+[data-theme="dark"] .profile-container .form-text {
+    color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .profile-container input,
+[data-theme="dark"] .profile-container textarea,
+[data-theme="dark"] .profile-container select {
+    background: #151c27 !important;
+    color: #f8fafc !important;
+    border-color: #465366 !important;
+}
+
+[data-theme="dark"] .profile-container .stat-item {
+    background: #151c27 !important;
+    border-color: #3d4859 !important;
 }
 
 @media (max-width: 640px) {
     .profile-container .profile-avatar {
         flex-direction: column !important;
         text-align: center !important;
+    }
+
+    .profile-container .profile-content {
+        grid-template-columns: 1fr !important;
     }
 }
 </style>

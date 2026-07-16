@@ -1946,7 +1946,8 @@ def home_view(request):
 
     
 
-    latest_article = Article.objects.order_by('-published_date').first()
+    latest_articles = list(Article.objects.order_by('-published_date')[:3])
+    latest_article = latest_articles[0] if latest_articles else None
 
     partners = Partner.objects.all()
 
@@ -1993,6 +1994,8 @@ def home_view(request):
         'products': products,
 
         'latest_article': latest_article,
+
+        'latest_articles': latest_articles,
 
         'partners': partners,
 
@@ -2709,4 +2712,3 @@ def search_employees_api(request):
     
 
     return JsonResponse({'error': 'Method not allowed'}, status=405)
-
