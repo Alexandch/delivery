@@ -1,5 +1,9 @@
 {% extends "delivery_app/base.html" %}
+{% load static %}
 {% block title %}Панель сотрудника{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'delivery_app/css/pages/employee-panel.css' %}">
+{% endblock %}
 {% block content %}
 <section class="admin-page">
   <header class="admin-heading">
@@ -47,19 +51,13 @@
     <section class="admin-card stats-list"><h2>Статистика</h2><dl><div><dt>Медианный чек</dt><dd>{{ sales_median|floatformat:2 }} BYN</dd></div><div><dt>Наиболее частый чек</dt><dd>{{ sales_mode|floatformat:2 }} BYN</dd></div><div><dt>Средний возраст клиентов</dt><dd>{{ age_mean|floatformat:0 }}</dd></div><div><dt>Медианный возраст</dt><dd>{{ age_median|floatformat:0 }}</dd></div></dl></section>
   </div>
 </section>
-<style>
-.admin-page{padding:18px 0 54px}.admin-heading{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:18px;margin-bottom:22px;padding:24px;border:1px solid #dce8f3;border-radius:18px;background:linear-gradient(135deg,#fff 0%,#eef7ff 100%);box-shadow:0 16px 45px rgba(31,56,88,.08)}.admin-heading h1{margin:.25rem 0;text-transform:none;color:#17395d;line-height:1.1}.admin-heading p{margin:0;color:#5f7085}.admin-kicker{font-size:.76rem;font-weight:800;color:#1f7a4b;letter-spacing:.13em;text-transform:uppercase}.admin-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}.admin-actions .btn{min-width:132px}.metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}.metric,.admin-card,.filter-card{background:#fff;border:1px solid #dfe7ef;border-radius:16px;box-shadow:0 8px 28px rgba(31,56,88,.07)}.metric{padding:18px;border-top:4px solid #2c5aa0}.metric span{display:block;color:#64748b;font-size:.82rem}.metric strong{display:block;color:#18324e;font-size:1.7rem;margin-top:5px;line-height:1.12}.metric small{font-size:.7rem}.filter-card{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr)) minmax(130px,auto) minmax(90px,auto);align-items:end;gap:12px;padding:16px;margin-bottom:18px}.filter-card label{display:block;font-size:.78rem;font-weight:700;margin-bottom:5px;color:#536579}.filter-card select,.filter-card input,.admin-table select,.admin-table input{width:100%;min-height:40px;border:1px solid #cfd9e4;border-radius:8px;padding:8px;background:#fff;color:#24364b}.reset-link{align-self:center;padding:10px 4px;text-align:center}.admin-card{padding:20px;margin-bottom:18px}.card-title{display:flex;justify-content:space-between;gap:15px;align-items:flex-start;margin-bottom:12px}.card-title h2,.stats-list h2{font-size:1.2rem;text-transform:none;margin:0;color:#18324e}.card-title p{font-size:.86rem;margin:2px 0;color:#66758a}.count-pill{flex:0 0 auto;background:#eef4fb;color:#2c5aa0;border-radius:999px;padding:5px 10px;font-weight:750}.admin-table-wrap{overflow-x:auto}.admin-table{width:100%;border-collapse:collapse;min-width:1050px}.admin-table th{padding:10px;text-align:left;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:#64748b;border-bottom:1px solid #dde5ed}.admin-table td{padding:13px 10px;border-bottom:1px solid #edf1f5;vertical-align:top;font-size:.88rem}.admin-table td small{display:block;color:#718096;margin-top:3px}.status{display:inline-flex;border-radius:999px;padding:3px 8px;font-size:.72rem;font-weight:700}.status-paid{background:#dcfce7;color:#166534}.status-pending{background:#fef3c7;color:#92400e}.status-failed{background:#fee2e2;color:#991b1b}.inline-form{display:flex;gap:5px;align-items:center}.icon-button{min-height:40px;border:0;border-radius:8px;background:#e8f7ef;color:#18794e;padding:0 11px;cursor:pointer}.order-update{display:grid;grid-template-columns:minmax(120px,1fr) minmax(130px,1fr) auto;gap:6px}.empty-row{text-align:center!important;padding:35px!important}.analytics-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:18px}.chart-wrap{position:relative;height:300px}.stats-list dl{margin:0}.stats-list dl div{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid #edf1f5}.stats-list dt{color:#64748b}.stats-list dd{font-weight:750;color:#18324e;text-align:right}@media(max-width:1080px){.filter-card{grid-template-columns:repeat(2,minmax(0,1fr))}.filter-card .btn,.filter-card .reset-link{width:100%}.analytics-grid{grid-template-columns:1fr}}@media(max-width:900px){.admin-heading{grid-template-columns:1fr;align-items:start}.admin-actions{justify-content:flex-start}.metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:650px){.admin-heading,.admin-card,.filter-card{padding:15px}.admin-actions{width:100%}.admin-actions .btn{flex:1 1 145px;min-width:0}.metric-grid,.filter-card{grid-template-columns:1fr}.metric{padding:14px}.metric strong{font-size:1.35rem}.card-title{flex-direction:column}.order-update{grid-template-columns:1fr}.inline-form{align-items:stretch}.inline-form .icon-button{flex:0 0 44px}}
-</style>
-<style>
-.admin-page{overflow:visible}.admin-heading{display:flex;align-items:center;justify-content:space-between;gap:22px;max-width:100%;overflow:visible}.admin-heading>div{min-width:0}.admin-heading h1{font-size:clamp(2rem,4vw,3rem);margin:0 0 8px;overflow-wrap:anywhere}.admin-actions{display:flex;flex:0 0 auto;min-width:0;gap:10px;flex-wrap:wrap}.admin-actions .btn{flex:0 1 auto}.metric-grid{margin-top:0}.admin-table-wrap{overflow-x:auto}.order-update{grid-template-columns:minmax(135px,1fr) minmax(150px,1fr) minmax(128px,auto)}.order-update .btn{min-width:128px;white-space:normal}.inline-form select{min-width:190px}@media(max-width:900px){.admin-heading{align-items:flex-start;flex-direction:column}.admin-actions{width:100%}.admin-actions .btn{flex:1 1 145px}}@media(max-width:650px){.order-update{grid-template-columns:1fr}.inline-form{flex-wrap:wrap}.inline-form select{min-width:0}}
-</style>
+
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-const statusCounts={% for status, count in status_counts.items %}"{{ status }}":{{ count }}{% if not forloop.last %},{% endif %}{% endfor %}};
-if (window.Chart) {
-  new Chart(document.getElementById('statusChart'),{type:'doughnut',data:{labels:Object.keys(statusCounts),datasets:[{data:Object.values(statusCounts),backgroundColor:['#f59e0b','#3b82f6','#22c55e','#ef4444'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom'}}}});
-} else {
-  document.querySelector('.chart-wrap').innerHTML='<p class="empty-row">Диаграмма недоступна без подключения библиотеки графиков.</p>';
-}
-</script>
+
+{{ status_counts|json_script:"employee-status-counts" }}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'delivery_app/js/pages/employee-panel.js' %}" defer></script>
 {% endblock %}

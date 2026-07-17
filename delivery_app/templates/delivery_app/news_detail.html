@@ -1,12 +1,15 @@
 {% extends "delivery_app/base.html" %}
 {% load static %}
 {% block title %}{{ article.title }}{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'delivery_app/css/pages/news-detail.css' %}">
+{% endblock %}
 {% block content %}
 <article>
   <h1>{{ article.title }}</h1>
   <p><em>{{ article.published_date }}</em></p>
   {% if article.image %}
-            <img src="{{ article.image.url }}" alt="{{ article.title }}" style="max-width: 500px; border: 1px solid #ddd; border-radius: 4px;">
+            <img src="{{ article.image.url }}" alt="{{ article.title }}" class="news-detail-image">
   {% endif %}
   <div>{{ article.content|safe }}</div>
 </article>

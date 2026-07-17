@@ -1,981 +1,204 @@
 {% extends "delivery_app/base.html" %}
+{% load static l10n %}
 
-{% block title %}
-Корзина
+{% block title %}Корзина{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'delivery_app/css/pages/cart.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="cart-container">
-    <div class="cart-header">
-        <h1>🛒 Ваша корзина</h1>
-        <p class="cart-subtitle">Дата: {{ current_date }} | Временная зона: {{ timezone }}</p>
-    </div>
-
-    {% if messages %}
-    <div class="messages">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">
-            <span>
-                {% if message.tags == 'success' %}✅
-                {% elif message.tags == 'error' %}❌
-                {% elif message.tags == 'warning' %}⚠️
-                {% else %}ℹ️{% endif %}
+<main class="cart-page">
+    <section class="cart-hero" aria-labelledby="cart-page-title">
+        <div class="cart-hero-copy">
+            <span class="cart-eyebrow">
+                <svg aria-hidden="true"><use href="#icon-cart"></use></svg>
+                Покупки
             </span>
-            {{ message }}
+            <h1 id="cart-page-title">Ваша корзина</h1>
+            <p>Проверьте количество товаров и переходите к оформлению заказа.</p>
         </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    <div class="cart-content">
-        {% if cart_items %}
-        <div class="cart-main">
-            <form method="post" action="{% url 'delivery_app:update_cart' %}" class="cart-form">
-                {% csrf_token %}
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Товары в корзине</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="cart-table-container">
-                            <table class="cart-table">
-                                <thead>
-                                    <tr>
-                                        <th>Товар</th>
-                                        <th>Цена за единицу</th>
-                                        <th>Количество</th>
-                                        <th>Общая стоимость</th>
-                                        <th>Действия</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in cart_items %}
-                                    <tr class="cart-item">
-                                        <td class="product-info">
-                                            <div class="product-name">{{ item.product.name }}</div>
-                                            {% if item.product.description %}
-                                            <div class="product-description">{{ item.product.description|truncatewords:10 }}</div>
-                                            {% endif %}
-                                        </td>
-                                        <td class="unit-price">{{ item.product.price }} BYN</td>
-                                        <td class="quantity-cell">
-                                            <div class="quantity-control">
-                                                <button type="button" class="btn-quantity btn-decrease" data-id="{{ item.id }}">-</button>
-                                                <input type="number" name="quantity_{{ item.id }}" value="{{ item.quantity }}" min="1" class="quantity-input">
-                                                <button type="button" class="btn-quantity btn-increase" data-id="{{ item.id }}">+</button>
-                                            </div>
-                                        </td>
-                                        <td class="total-price">{{ item.total_price }} BYN</td>
-                                        <td class="actions">
-                                            <a href="{% url 'delivery_app:remove_from_cart' item.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Вы уверены, что хотите удалить этот товар?')">
-                                                <span>🗑️</span> Удалить
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div class="cart-summary">
-                            <div class="summary-card">
-                                <div class="summary-header">
-                                    <h3>Итоги заказа</h3>
-                                </div>
-                                <div class="summary-body">
-                                    <div class="summary-row">
-                                        <span>Количество товаров:</span>
-                                        <span>{{ cart_items|length }}</span>
-                                    </div>
-                                    <div class="summary-row total">
-                                        <span><strong>Итого к оплате:</strong></span>
-                                        <span class="total-cart-price"><strong>{{ total_price }} BYN</strong></span>
-                                    </div>
-                                </div>
-                                <div class="summary-actions">
-                                    <button type="submit" class="btn btn-primary btn-large">
-                                        <span>🔄</span> Обновить корзину
-                                    </button>
-                                    <a href="{% url 'delivery_app:checkout' %}" class="btn btn-success btn-large">
-                                        <span>🚀</span> Оформить заказ
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </form>
+        <div class="cart-hero-meta">
+            <span class="cart-count-badge">
+                <strong data-total-quantity>{{ total_quantity }}</strong>
+                <span>товаров</span>
+            </span>
+            <span class="cart-date">{{ current_date|date:"d.m.Y" }}</span>
         </div>
-        {% else %}
-        <div class="empty-cart">
-            <div class="card">
-                <div class="card-body">
-                    <div class="empty-state">
-                        <div class="empty-icon">🛒</div>
-                        <h3>Ваша корзина пуста</h3>
-                        <p>Добавьте товары из каталога, чтобы сделать заказ</p>
-                        <a href="{% url 'delivery_app:product_list' %}" class="btn btn-primary">
-                            <span>📦</span> Перейти к покупкам
-                        </a>
-                    </div>
+    </section>
+
+    {% if cart_items %}
+    <form method="post" action="{% url 'delivery_app:update_cart' %}" class="cart-layout" id="cart-form">
+        {% csrf_token %}
+        <section class="cart-items-panel" aria-labelledby="cart-items-title">
+            <div class="cart-section-heading">
+                <div>
+                    <span class="section-kicker">Ваш заказ</span>
+                    <h2 id="cart-items-title">Товары в корзине</h2>
                 </div>
+                <a href="{% url 'delivery_app:product_list' %}" class="continue-shopping">
+                    Продолжить покупки
+                    <svg aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                </a>
             </div>
-        </div>
-        {% endif %}
 
-        <div class="cart-sidebar">
-            <div class="card">
-                <div class="card-header">
-                    <h3>📅 Календарь на {{ current_date }}</h3>
+            <div class="cart-items-list">
+                {% for item in cart_items %}
+                <article class="cart-product" data-cart-item data-unit-price="{{ item.product.price|unlocalize }}">
+                    <a href="{% url 'delivery_app:product_detail' item.product.id %}" class="cart-product-image" aria-label="Подробнее о товаре {{ item.product.name }}">
+                        {% if item.product.image %}
+                        <img src="{{ item.product.image_thumbnail.url }}" alt="{{ item.product.name }}" loading="lazy">
+                        {% else %}
+                        <span class="cart-product-placeholder">
+                            <svg aria-hidden="true"><use href="#icon-box"></use></svg>
+                        </span>
+                        {% endif %}
+                    </a>
+
+                    <div class="cart-product-copy">
+                        <span class="cart-product-category">{{ item.product.product_type.name }}</span>
+                        <a href="{% url 'delivery_app:product_detail' item.product.id %}" class="cart-product-name">{{ item.product.name }}</a>
+                        {% if item.product.description %}
+                        <p>{{ item.product.description|truncatewords:12 }}</p>
+                        {% endif %}
+                        <span class="cart-unit-price">{{ item.product.price }} BYN за единицу</span>
+                    </div>
+
+                    <div class="cart-product-controls">
+                        <span class="control-label">Количество</span>
+                        <div class="quantity-control">
+                            <button type="button" class="quantity-button btn-decrease" aria-label="Уменьшить количество {{ item.product.name }}">−</button>
+                            <input type="number" name="quantity_{{ item.id }}" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" class="quantity-input" aria-label="Количество товара {{ item.product.name }}">
+                            <button type="button" class="quantity-button btn-increase" aria-label="Увеличить количество {{ item.product.name }}">+</button>
+                        </div>
+                    </div>
+
+                    <div class="cart-product-total">
+                        <span>Сумма</span>
+                        <strong data-line-total>{{ item.total_price }} BYN</strong>
+                    </div>
+
+                    <a href="{% url 'delivery_app:remove_from_cart' item.id %}" class="remove-product" data-confirm-remove aria-label="Удалить {{ item.product.name }} из корзины">
+                        <svg aria-hidden="true"><use href="#icon-trash"></use></svg>
+                        <span>Удалить</span>
+                    </a>
+                </article>
+                {% endfor %}
+            </div>
+
+            <div class="cart-panel-footer">
+                <span>
+                    <svg aria-hidden="true"><use href="#icon-shield"></use></svg>
+                    Товары сохранятся в корзине до оформления заказа
+                </span>
+                <button type="submit" class="update-cart-button">
+                    <svg aria-hidden="true"><use href="#icon-refresh"></use></svg>
+                    Обновить корзину
+                </button>
+            </div>
+        </section>
+
+        <aside class="cart-sidebar" aria-label="Итоги заказа">
+            <section class="order-summary-card">
+                <span class="section-kicker">К оплате</span>
+                <h2>Итоги заказа</h2>
+
+                <div class="summary-lines">
+                    <div class="summary-line">
+                        <span>Количество товаров</span>
+                        <strong data-total-quantity>{{ total_quantity }}</strong>
+                    </div>
+                    <div class="summary-line">
+                        <span>Стоимость товаров</span>
+                        <strong data-cart-total>{{ total_price }} BYN</strong>
+                    </div>
+                    <div class="summary-line">
+                        <span>Доставка</span>
+                        <strong class="delivery-calculation">Рассчитается далее</strong>
+                    </div>
                 </div>
-                <div class="card-body">
+
+                <div class="summary-total">
+                    <span>Итого</span>
+                    <strong data-cart-total>{{ total_price }} BYN</strong>
+                </div>
+
+                <a href="{% url 'delivery_app:checkout' %}" class="checkout-button">
+                    Оформить заказ
+                    <svg aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                </a>
+
+                <div class="secure-checkout">
+                    <svg aria-hidden="true"><use href="#icon-shield"></use></svg>
+                    Безопасное оформление и защищённая оплата
+                </div>
+            </section>
+        </aside>
+
+        <div class="cart-extras">
+            <section class="delivery-card">
+                <div class="delivery-card-heading">
+                    <span class="section-kicker">Сервис</span>
+                    <h2>Условия доставки</h2>
+                </div>
+                <div class="delivery-benefits">
+                    <div class="delivery-benefit">
+                        <span class="benefit-icon"><svg aria-hidden="true"><use href="#icon-truck"></use></svg></span>
+                        <div><strong>От 2 часов</strong><span>по Минску</span></div>
+                    </div>
+                    <div class="delivery-benefit">
+                        <span class="benefit-icon"><svg aria-hidden="true"><use href="#icon-wallet"></use></svg></span>
+                        <div><strong>Бесплатно</strong><span>при заказе от 50 BYN</span></div>
+                    </div>
+                    <div class="delivery-benefit">
+                        <span class="benefit-icon"><svg aria-hidden="true"><use href="#icon-clock"></use></svg></span>
+                        <div><strong>Ежедневно</strong><span>с 8:00 до 22:00</span></div>
+                    </div>
+                </div>
+            </section>
+
+            <details class="cart-calendar-card">
+                <summary>
+                    <span>
+                        <svg aria-hidden="true"><use href="#icon-clock"></use></svg>
+                        Календарь доставки
+                    </span>
+                    <span>{{ current_date|date:"F Y" }}</span>
+                </summary>
+                <div class="calendar-wrap">
                     <table class="calendar-table">
                         <thead>
-                            <tr>
-                                <th>Пн</th>
-                                <th>Вт</th>
-                                <th>Ср</th>
-                                <th>Чт</th>
-                                <th>Пт</th>
-                                <th>Сб</th>
-                                <th>Вс</th>
-                            </tr>
+                            <tr><th>Пн</th><th>Вт</th><th>Ср</th><th>Чт</th><th>Пт</th><th>Сб</th><th>Вс</th></tr>
                         </thead>
                         <tbody>
                             {% for week in calendar %}
                             <tr>
                                 {% for day in week %}
-                                <td{% if day == 0 %} class="empty"{% endif %}>
-                                    {{ day|default:"" }}
-                                </td>
+                                <td{% if day == 0 %} class="empty"{% endif %}>{{ day|default:"" }}</td>
                                 {% endfor %}
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h3>🚚 Условия доставки</h3>
-                </div>
-                <div class="card-body">
-                    <div class="delivery-info">
-                        <div class="info-item">
-                            <span class="info-icon">⏱️</span>
-                            <div class="info-text">
-                                <strong>Быстрая доставка</strong>
-                                <p>В течение 2 часов по городу</p>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-icon">💰</span>
-                            <div class="info-text">
-                                <strong>Бесплатная доставка</strong>
-                                <p>При заказе от 50 BYN</p>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-icon">🕒</span>
-                            <div class="info-text">
-                                <strong>Работаем ежедневно</strong>
-                                <p>с 8:00 до 22:00</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            </details>
         </div>
-    </div>
-</div>
-
-<style>
-
-.cart-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.cart-header {
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-.cart-header h1 {
-    color: var(--primary-color);
-    margin-bottom: 10px;
-    font-size: 2.2em;
-}
-
-.cart-subtitle {
-    color: var(--text-light);
-    font-size: 1.1em;
-}
-
-.cart-content {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 30px;
-    align-items: start;
-}
-
-
-.cart-table-container {
-    overflow-x: auto;
-    margin-bottom: 30px;
-}
-
-.cart-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.cart-table th {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    color: rgb(102, 131, 189);
-    padding: 15px 12px;
-    text-align: left;
-    font-weight: 600;
-    font-size: 0.9em;
-}
-
-.cart-table td {
-    padding: 15px 12px;
-    border-bottom: 1px solid var(--border-color);
-    vertical-align: middle;
-}
-
-.cart-table tbody tr:hover {
-    background-color: rgba(44, 90, 160, 0.03);
-}
-
-.cart-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-
-.product-info {
-    max-width: 250px;
-}
-
-.product-name {
-    font-weight: 600;
-    color: var(--primary-color);
-    margin-bottom: 5px;
-}
-
-.product-description {
-    font-size: 0.85em;
-    color: var(--text-light);
-    line-height: 1.3;
-}
-
-.unit-price, .total-price {
-    font-weight: 600;
-    color: var(--primary-color);
-    white-space: nowrap;
-}
-
-
-.quantity-control {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    max-width: 120px;
-}
-
-.btn-quantity {
-    width: 35px;
-    height: 35px;
-    border: 1px solid var(--border-color);
-    background: white;
-    border-radius: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1.1em;
-    transition: all 0.3s ease;
-}
-
-.btn-quantity:hover {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-.quantity-input {
-    width: 50px;
-    height: 35px;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    text-align: center;
-    font-weight: 600;
-}
-
-.quantity-input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(44, 90, 160, 0.1);
-}
-
-
-.actions {
-    white-space: nowrap;
-}
-
-.btn-sm {
-    padding: 6px 12px;
-    font-size: 0.85em;
-}
-
-.btn-danger {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-}
-
-.btn-danger:hover {
-    background-color: #c82333;
-    transform: translateY(-1px);
-}
-
-
-.cart-summary {
-    margin-top: 30px;
-}
-
-.summary-card {
-    background: var(--bg-light);
-    border-radius: 10px;
-    padding: 20px;
-    border: 1px solid var(--border-color);
-}
-
-.summary-header {
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.summary-header h3 {
-    color: var(--primary-color);
-    margin: 0;
-    font-size: 1.3em;
-}
-
-.summary-body {
-    margin-bottom: 20px;
-}
-
-.summary-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-}
-
-.summary-row.total {
-    border-top: 2px solid var(--border-color);
-    margin-top: 10px;
-    padding-top: 15px;
-    font-size: 1.1em;
-}
-
-.total-cart-price {
-    color: var(--primary-color);
-    font-size: 1.2em;
-}
-
-.summary-actions {
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
-.summary-actions .btn {
-    flex: 1;
-    min-width: 160px;
-    justify-content: center;
-}
-
-
-.empty-cart {
-    grid-column: 1 / -1;
-    text-align: center;
-}
-
-.empty-state {
-    padding: 40px 20px;
-}
-
-.empty-icon {
-    font-size: 4em;
-    margin-bottom: 20px;
-    opacity: 0.7;
-}
-
-.empty-state h3 {
-    color: var(--text-light);
-    margin-bottom: 10px;
-}
-
-.empty-state p {
-    color: var(--text-light);
-    margin-bottom: 25px;
-}
-
-
-.cart-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-
-.calendar-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: center;
-}
-
-.calendar-table th {
-    background-color: var(--bg-light);
-    padding: 10px 5px;
-    font-weight: 600;
-    color: var(--primary-color);
-    font-size: 0.8em;
-}
-
-.calendar-table td {
-    padding: 8px 5px;
-    border: 1px solid var(--border-color);
-    font-size: 0.8em;
-}
-
-.calendar-table td.empty {
-    background-color: var(--bg-light);
-    color: var(--text-light);
-}
-
-
-.delivery-info {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.info-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-}
-
-.info-icon {
-    font-size: 1.2em;
-    flex-shrink: 0;
-}
-
-.info-text strong {
-    display: block;
-    color: var(--primary-color);
-    margin-bottom: 4px;
-    font-size: 0.9em;
-}
-
-.info-text p {
-    margin: 0;
-    font-size: 0.8em;
-    color: var(--text-light);
-}
-
-
-.card {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
-    overflow: hidden;
-}
-
-.card-header {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-    color: rgb(147, 183, 254);
-    padding: 20px;
-}
-
-.card-header h2,
-.card-header h3 {
-    color: rgb(147, 183, 254);
-    margin: 0;
-    font-size: 1.2em;
-}
-
-.card-body {
-    padding: 20px;
-}
-
-
-.cart-table tbody tr {
-    animation: fadeInUp 0.4s ease-out;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-
-@media (max-width: 992px) {
-    .cart-content {
-        grid-template-columns: 1fr;
-    }
-    
-    .summary-actions {
-        flex-direction: column;
-    }
-    
-    .summary-actions .btn {
-        min-width: auto;
-    }
-}
-
-@media (max-width: 768px) {
-    .cart-container {
-        padding: 15px;
-    }
-    
-    .cart-header h1 {
-        font-size: 1.8em;
-    }
-    
-    .cart-table {
-        font-size: 0.9em;
-    }
-    
-    .cart-table th,
-    .cart-table td {
-        padding: 10px 8px;
-    }
-    
-    .quantity-control {
-        max-width: 100px;
-    }
-    
-    .btn-quantity {
-        width: 30px;
-        height: 30px;
-        font-size: 1em;
-    }
-    
-    .quantity-input {
-        width: 40px;
-        height: 30px;
-    }
-}
-
-@media (max-width: 480px) {
-    .cart-container {
-        padding: 10px;
-    }
-    
-    .cart-table {
-        font-size: 0.8em;
-    }
-    
-    .cart-table th,
-    .cart-table td {
-        padding: 8px 6px;
-    }
-    
-    .product-info {
-        max-width: 150px;
-    }
-    
-    .actions .btn {
-        padding: 4px 8px;
-        font-size: 0.8em;
-    }
-    
-    .info-item {
-        flex-direction: column;
-        text-align: center;
-        gap: 8px;
-    }
-}
-
-
-.alert {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    border-left: 4px solid;
-}
-
-.alert-error {
-    background-color: rgba(220, 53, 69, 0.1);
-    border-color: #dc3545;
-    color: #721c24;
-}
-
-.alert-success {
-    background-color: rgba(40, 167, 69, 0.1);
-    border-color: var(--secondary-color);
-    color: #155724;
-}
-
-.alert-warning {
-    background-color: rgba(255, 193, 7, 0.1);
-    border-color: #ffc107;
-    color: #856404;
-}
-
-.alert-info {
-    background-color: rgba(23, 162, 184, 0.1);
-    border-color: #17a2b8;
-    color: #0c5460;
-}
-
-.cart-container {
-    max-width: 1220px;
-    padding: 24px 0 58px;
-}
-
-.cart-header {
-    margin-bottom: 28px;
-    padding: 22px 26px;
-    border: 1px solid #dfe8f2;
-    border-radius: 22px;
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: 0 18px 45px rgba(31, 54, 85, 0.08);
-}
-
-.cart-header h1 {
-    margin: 0 0 10px;
-    color: #18324e;
-    font-size: clamp(32px, 4vw, 52px);
-    line-height: 1.05;
-}
-
-.cart-subtitle {
-    margin: 0;
-    color: #62748b;
-    font-weight: 500;
-}
-
-.cart-content {
-    grid-template-columns: minmax(0, 1.6fr) minmax(320px, 0.78fr);
-    gap: 26px;
-}
-
-.cart-main .card,
-.cart-sidebar .card,
-.summary-card {
-    background: #ffffff;
-    border: 1px solid #dfe8f2;
-    border-radius: 20px;
-    color: #18324e;
-    box-shadow: 0 20px 48px rgba(31, 54, 85, 0.08);
-}
-
-.cart-main .card {
-    overflow: hidden;
-}
-
-.card-header {
-    background: linear-gradient(135deg, #3f61a8, #5d83d8);
-    color: #ffffff !important;
-    padding: 20px 24px;
-}
-
-.card-header h2,
-.card-header h3 {
-    color: #ffffff !important;
-    font-size: 1.35rem;
-    line-height: 1.35;
-}
-
-.card-body {
-    padding: 22px;
-}
-
-.cart-table-container {
-    margin-bottom: 24px;
-    overflow-x: auto;
-    border: 1px solid #dfe8f2;
-    border-radius: 16px;
-}
-
-.cart-table {
-    min-width: 780px;
-    border-radius: 0;
-    box-shadow: none;
-}
-
-.cart-table th {
-    background: #3f61a8;
-    color: #ffffff !important;
-    padding: 17px 18px;
-    font-size: 0.94rem;
-    letter-spacing: 0.01em;
-}
-
-.cart-table td {
-    padding: 18px;
-    color: #334155;
-    background: #ffffff;
-    border-color: #e7edf5;
-}
-
-.cart-table tbody tr:hover td {
-    background: #f8fbff;
-}
-
-.product-name,
-.unit-price,
-.total-price,
-.total-cart-price,
-.summary-header h3,
-.info-text strong {
-    color: #274b84;
-}
-
-.product-description,
-.summary-row,
-.info-text p {
-    color: #64748b;
-}
-
-.quantity-control {
-    max-width: none;
-    width: max-content;
-    gap: 8px;
-}
-
-.btn-quantity,
-.quantity-input {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    border: 1px solid #cbd8e6;
-    background: #ffffff;
-    color: #18324e;
-}
-
-.btn-quantity {
-    font-size: 18px;
-}
-
-.quantity-input {
-    width: 58px;
-    font-size: 18px;
-    font-weight: 800;
-}
-
-.btn-quantity:hover {
-    background: #3f61a8;
-    border-color: #3f61a8;
-    color: #ffffff;
-}
-
-.summary-card {
-    margin-top: 22px;
-    padding: 24px;
-}
-
-.summary-actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-}
-
-.summary-actions .btn {
-    width: 100%;
-    min-width: 0;
-    min-height: 54px;
-    white-space: normal;
-}
-
-.calendar-table {
-    overflow: hidden;
-    border-radius: 16px;
-}
-
-.calendar-table th {
-    background: #eef5ff;
-    color: #31599a;
-}
-
-.calendar-table td {
-    color: #4b5f78;
-}
-
-.calendar-table td.empty {
-    background: #f6f8fb;
-}
-
-.delivery-info {
-    gap: 18px;
-}
-
-[data-theme="dark"] .cart-header,
-[data-theme="dark"] .cart-main .card,
-[data-theme="dark"] .cart-sidebar .card,
-[data-theme="dark"] .summary-card {
-    background: #242932 !important;
-    border-color: #3b4656 !important;
-    color: #f4f7fb !important;
-    box-shadow: 0 22px 54px rgba(0, 0, 0, 0.28);
-}
-
-[data-theme="dark"] .cart-header h1,
-[data-theme="dark"] .product-name,
-[data-theme="dark"] .unit-price,
-[data-theme="dark"] .total-price,
-[data-theme="dark"] .total-cart-price,
-[data-theme="dark"] .summary-header h3,
-[data-theme="dark"] .info-text strong,
-[data-theme="dark"] .empty-state h3 {
-    color: #f8fafc !important;
-}
-
-[data-theme="dark"] .cart-subtitle,
-[data-theme="dark"] .product-description,
-[data-theme="dark"] .summary-row,
-[data-theme="dark"] .info-text p,
-[data-theme="dark"] .empty-state p {
-    color: #cbd5e1 !important;
-}
-
-[data-theme="dark"] .cart-table-container {
-    border-color: #3b4656 !important;
-}
-
-[data-theme="dark"] .cart-table,
-[data-theme="dark"] .cart-table td,
-[data-theme="dark"] .cart-table tbody tr {
-    background: #242932 !important;
-    color: #e5edf7 !important;
-    border-color: #3b4656 !important;
-}
-
-[data-theme="dark"] .cart-table tbody tr:hover td {
-    background: #2b3240 !important;
-}
-
-[data-theme="dark"] .cart-table th {
-    background: #171d26 !important;
-    color: #f8fafc !important;
-}
-
-[data-theme="dark"] .btn-quantity,
-[data-theme="dark"] .quantity-input {
-    background: #151b24 !important;
-    border-color: #4a5870 !important;
-    color: #ffffff !important;
-}
-
-[data-theme="dark"] .quantity-input:focus {
-    border-color: #8fb2ff !important;
-    box-shadow: 0 0 0 3px rgba(143, 178, 255, 0.2) !important;
-}
-
-[data-theme="dark"] .summary-header,
-[data-theme="dark"] .summary-row.total {
-    border-color: #3b4656 !important;
-}
-
-[data-theme="dark"] .calendar-table th {
-    background: #17202c !important;
-    color: #dbeafe !important;
-}
-
-[data-theme="dark"] .calendar-table td {
-    background: #202733 !important;
-    border-color: #3b4656 !important;
-    color: #cbd5e1 !important;
-}
-
-[data-theme="dark"] .calendar-table td.empty {
-    background: #171d26 !important;
-    color: #64748b !important;
-}
-
-@media (max-width: 1100px) {
-    .cart-content {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 700px) {
-    .cart-container {
-        padding: 16px 12px 42px;
-    }
-
-    .cart-header {
-        text-align: left;
-    }
-
-    .summary-actions {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
-
-<script>
-    document.querySelectorAll('.btn-increase').forEach(button => {
-        button.addEventListener('click', function() {
-            let input = this.parentElement.querySelector('.quantity-input');
-            let newValue = parseInt(input.value) + 1;
-            input.value = newValue;
-            updateTotalPrice(this.closest('tr'), newValue);
-        });
-    });
-
-    document.querySelectorAll('.btn-decrease').forEach(button => {
-        button.addEventListener('click', function() {
-            let input = this.parentElement.querySelector('.quantity-input');
-            let newValue = parseInt(input.value) - 1;
-            if (newValue >= 1) {
-                input.value = newValue;
-                updateTotalPrice(this.closest('tr'), newValue);
-            }
-        });
-    });
-
-    document.querySelectorAll('.quantity-input').forEach(input => {
-        input.addEventListener('change', function() {
-            if (this.value < 1) this.value = 1;
-            updateTotalPrice(this.closest('tr'), this.value);
-        });
-    });
-
-    function updateTotalPrice(row, quantity) {
-        let price = parseFloat(row.cells[1].textContent);
-        let totalCell = row.cells[3];
-        totalCell.textContent = (price * quantity).toFixed(2) + ' BYN';
-
-        let totalCartPrice = 0;
-        document.querySelectorAll('.cart-table tbody tr').forEach(row => {
-            totalCartPrice += parseFloat(row.cells[3].textContent);
-        });
-        document.querySelector('.total-cart-price').textContent = totalCartPrice.toFixed(2) + ' BYN';
-    }
-</script>
+    </form>
+    {% else %}
+    <section class="empty-cart" aria-labelledby="empty-cart-title">
+        <span class="empty-cart-icon"><svg aria-hidden="true"><use href="#icon-cart"></use></svg></span>
+        <span class="section-kicker">Здесь пока пусто</span>
+        <h2 id="empty-cart-title">Добавьте продукты в корзину</h2>
+        <p>В каталоге уже собраны свежие товары с актуальными ценами и остатками.</p>
+        <a href="{% url 'delivery_app:product_list' %}" class="checkout-button">
+            Перейти в каталог
+            <svg aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+        </a>
+    </section>
+    {% endif %}
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'delivery_app/js/pages/cart.js' %}" defer></script>
 {% endblock %}

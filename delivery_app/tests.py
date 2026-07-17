@@ -694,3 +694,52 @@ class CartTests(TestCase):
 
         self.assertEqual(cart_item.total_price, Decimal('3.98'))
 
+    def test_product_list_contains_saved_cart_quantity(self):
+
+        CartItem.objects.create(user=self.user, product=self.product, quantity=3)
+
+        self.test_client.login(username='testuser', password='testpass123')
+
+        response = self.test_client.get(reverse('delivery_app:product_list'))
+
+        rendered_product = next(item for item in response.context['products'] if item.id == self.product.id)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(rendered_product.cart_quantity, 3)
+
+        self.assertContains(response, 'data-cart-quantity="3"')
+
+    def test_ajax_cart_quantity_can_be_added_updated_and_removed(self):
+
+        self.test_client.login(username='testuser', password='testpass123')
+
+        url = reverse('delivery_app:add_to_cart', args=[self.product.id])
+
+        ajax_headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
+
+        response = self.test_client.post(url, {'quantity': 2, 'operation': 'add'}, **ajax_headers)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(response.json()['quantity'], 2)
+
+        self.assertEqual(response.json()['cart_count'], 1)
+
+        response = self.test_client.post(url, {'quantity': 5, 'operation': 'set'}, **ajax_headers)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(response.json()['quantity'], 5)
+
+        self.assertEqual(CartItem.objects.get(user=self.user, product=self.product).quantity, 5)
+
+        response = self.test_client.post(url, {'quantity': 0, 'operation': 'set'}, **ajax_headers)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(response.json()['quantity'], 0)
+
+        self.assertEqual(response.json()['cart_count'], 0)
+
+        self.assertFalse(CartItem.objects.filter(user=self.user, product=self.product).exists())

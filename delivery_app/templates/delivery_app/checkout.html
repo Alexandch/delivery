@@ -1,6 +1,10 @@
 {% extends "delivery_app/base.html" %}
+{% load static %}
 
 {% block title %}Оформление заказа{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'delivery_app/css/pages/checkout.css' %}">
+{% endblock %}
 
 {% block content %}
 <section class="checkout-page">
@@ -90,25 +94,10 @@
     </div>
 </section>
 
-<style>
-.checkout-page{padding:18px 0 50px}.page-heading{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;margin-bottom:24px}.page-heading h1{margin:.2rem 0;text-transform:none}.page-heading p{margin:0}.eyebrow{color:#2f855a;font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.12em}.checkout-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(340px,.85fr);gap:24px;align-items:start}.checkout-card{background:#fff;border:1px solid #dfe7ef;border-radius:18px;padding:24px;box-shadow:0 12px 35px rgba(31,56,88,.08)}.checkout-card h2{font-size:1.25rem;text-transform:none}.table-scroll{overflow-x:auto}.checkout-table{width:100%;border-collapse:collapse}.checkout-table th,.checkout-table td{padding:14px 10px;text-align:left;border-bottom:1px solid #edf1f5}.checkout-table th{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:#64748b}.checkout-total{display:flex;justify-content:space-between;align-items:center;font-size:1.2rem;padding-top:20px}.checkout-total strong{font-size:1.45rem;color:#1f6f43}.cost-note,.secure-note{font-size:.82rem;margin:8px 0 0}.checkout-form .form-group{margin-bottom:17px}.checkout-form label,.payment-options legend{font-weight:650;color:#24364b;margin-bottom:7px}.delivery-field[hidden]{display:none}.payment-options{border:0;padding:0;margin:5px 0 20px}.payment-options legend{padding:0}.payment-option{display:grid!important;grid-template-columns:auto auto 1fr;gap:12px;align-items:center;padding:13px;border:1px solid #dfe7ef;border-radius:12px;margin:9px 0!important;cursor:pointer;background:#fbfdff}.payment-option:has(input:checked){border-color:#2c5aa0;background:#f0f6ff;box-shadow:0 0 0 2px rgba(44,90,160,.1)}.payment-option input{width:18px;height:18px}.payment-icon{font-size:1.35rem}.payment-option small{display:block;color:#64748b;font-weight:400}.submit-order{width:100%;font-size:1.05rem}.secure-note{text-align:center}.btn-outline{white-space:nowrap}@media(max-width:820px){.page-heading{align-items:flex-start;flex-direction:column}.checkout-layout{grid-template-columns:1fr}.checkout-card{padding:18px}.checkout-table th,.checkout-table td{padding:10px 7px;font-size:.9rem}}
-</style>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const method = document.getElementById('delivery_method');
-    const pickup = document.getElementById('pickup_point_div');
-    const address = document.getElementById('delivery_address_div');
-    const pickupSelect = document.getElementById('pickup_point');
-    const addressInput = document.getElementById('delivery_address');
-    const syncDeliveryFields = () => {
-        const isPickup = method.value === 'pickup';
-        pickup.hidden = !isPickup;
-        address.hidden = isPickup;
-        pickupSelect.required = isPickup;
-        addressInput.required = !isPickup;
-    };
-    method.addEventListener('change', syncDeliveryFields);
-    syncDeliveryFields();
-});
-</script>
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'delivery_app/js/pages/checkout.js' %}" defer></script>
 {% endblock %}

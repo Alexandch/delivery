@@ -440,13 +440,25 @@ class Order(models.Model):
 
     def total_cost(self):
 
-        items = list(self.orderitem_set.select_related('product'))
+        prefetched_items = getattr(self, '_prefetched_objects_cache', {}).get('orderitem_set')
+
+        items = list(prefetched_items) if prefetched_items is not None else list(self.orderitem_set.select_related('product'))
 
         base_total = sum(Decimal(str(item.quantity)) * item.price for item in items)
 
         if self.promocode and self.promocode.is_valid():
 
-            applicable_ids = set(self.promocode.applicable_products.values_list('id', flat=True))
+            prefetched_products = getattr(self.promocode, '_prefetched_objects_cache', {}).get('applicable_products')
+
+            applicable_ids = (
+
+                {product.id for product in prefetched_products}
+
+                if prefetched_products is not None
+
+                else set(self.promocode.applicable_products.values_list('id', flat=True))
+
+            )
 
             eligible_total = sum(
 
@@ -711,4 +723,3 @@ class PrivacyPolicy(models.Model):
     def __str__(self):
 
         return self.title
-

@@ -1,0 +1,5 @@
+.news-detail-image {
+    width: min(100%, 500px);
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}

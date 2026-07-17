@@ -1,6 +1,7 @@
 from datetime import date
 
 import json
+import re
 
 from decimal import Decimal, InvalidOperation
 
@@ -152,6 +153,20 @@ class ProductListView(ListView):
 
         context = super().get_context_data(**kwargs)
 
+        cart_quantities = {}
+
+        if self.request.user.is_authenticated:
+
+            cart_quantities = dict(
+
+                CartItem.objects.filter(user=self.request.user).values_list('product_id', 'quantity')
+
+            )
+
+        for product in context['products']:
+
+            product.cart_quantity = cart_quantities.get(product.id, 0)
+
         context.update({
 
             'product_types': ProductType.objects.all(),
@@ -282,21 +297,43 @@ class OrderListView(LoginRequiredMixin, ListView):
 
     context_object_name = 'orders'
 
+    paginate_by = 8
 
+    status_groups = {
+        'pending': {'pending', 'в ожидании'},
+        'shipped': {'shipped', 'sent', 'отправлен'},
+        'delivered': {'delivered', 'доставлен', 'доставлено'},
+        'canceled': {'canceled', 'cancelled', 'отменен', 'отменён'},
+    }
 
-    def get_queryset(self):
+    status_values = {
+        'pending': ['Pending', 'В ожидании'],
+        'shipped': ['Shipped', 'Sent', 'Отправлен'],
+        'delivered': ['Delivered', 'Доставлен', 'Доставлено'],
+        'canceled': ['Canceled', 'Cancelled', 'Отменен', 'Отменён'],
+    }
+
+    def get_base_queryset(self):
 
         user = self.request.user
 
+        queryset = Order.objects.select_related('client__user', 'employee__user', 'promocode').prefetch_related(
+
+            'orderitem_set__product',
+
+            'promocode__applicable_products',
+
+        )
+
         if user.is_superuser:
 
-            return Order.objects.all()                                      
+            return queryset
 
         try:
 
             employee = Employee.objects.get(user=user)
 
-            return Order.objects.filter(employee=employee)                               
+            return queryset.filter(employee=employee)
 
         except Employee.DoesNotExist:
 
@@ -304,11 +341,65 @@ class OrderListView(LoginRequiredMixin, ListView):
 
                 client = Client.objects.get(user=user)
 
-                return Order.objects.filter(client=client)                            
+                return queryset.filter(client=client)
 
             except Client.DoesNotExist:
 
-                return Order.objects.none()
+                return queryset.none()
+
+
+
+    def get_queryset(self):
+
+        queryset = self.get_base_queryset()
+
+        status_filter = self.request.GET.get('status', '').strip().lower()
+
+        if status_filter in self.status_values:
+
+            status_query = Q()
+
+            for value in self.status_values[status_filter]:
+
+                status_query |= Q(status__iexact=value)
+
+            queryset = queryset.filter(status_query)
+
+        search_query = self.request.GET.get('q', '').strip()
+
+        if search_query:
+
+            search_filter = Q(client__user__username__icontains=search_query) | Q(delivery_address__icontains=search_query)
+
+            if search_query.lstrip('#').isdigit():
+
+                search_filter |= Q(pk=int(search_query.lstrip('#')))
+
+            queryset = queryset.filter(search_filter)
+
+        return queryset.order_by('-date_ordered', '-id')
+
+    def normalize_status(self, status):
+
+        normalized = (status or '').strip().lower()
+
+        for key, values in self.status_groups.items():
+
+            if normalized in values:
+
+                return key
+
+        return 'pending'
+
+    def prepare_order(self, order):
+
+        order.status_key = self.normalize_status(order.status)
+
+        order.items_total = sum((item.quantity for item in order.orderitem_set.all()), Decimal('0'))
+
+        order.payment_key = order.payment_status if order.payment_status in {'pending', 'paid', 'failed'} else 'pending'
+
+        return order
 
 
 
@@ -316,11 +407,35 @@ class OrderListView(LoginRequiredMixin, ListView):
 
         context = super().get_context_data(**kwargs)
 
+        visible_orders = context['orders']
+
+        for order in visible_orders:
+
+            self.prepare_order(order)
+
+        all_orders = list(self.get_base_queryset().order_by('-date_ordered'))
+
+        for order in all_orders:
+
+            self.prepare_order(order)
+
+        active_statuses = {'pending', 'shipped'}
+
+        context['orders_total'] = len(all_orders)
+
+        context['orders_active'] = sum(order.status_key in active_statuses for order in all_orders)
+
+        context['orders_delivered'] = sum(order.status_key == 'delivered' for order in all_orders)
+
+        context['orders_amount'] = sum((order.total_cost for order in all_orders), Decimal('0'))
+
+        context['status_filter'] = self.request.GET.get('status', '').strip().lower()
+
+        context['search_query'] = self.request.GET.get('q', '').strip()
+
         context['current_date'] = timezone.now().strftime('%d/%m/%Y')
 
         context['timezone'] = 'Europe/Minsk'
-
-        context['calendar'] = calendar.monthcalendar(timezone.now().year, timezone.now().month)
 
         return context
 
@@ -592,39 +707,111 @@ def edit_order(request, pk):
 
 @login_required
 
+@require_POST
+
 def add_to_cart(request, product_id):
 
     product = get_object_or_404(Product, id=product_id)
 
-    if not request.user.is_authenticated:
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
 
-        messages.error(request, "Пожалуйста, войдите, чтобы добавить товар в корзину.")
+    operation = request.POST.get('operation', 'add')
 
-        return redirect('delivery_app:login')
+    try:
 
+        quantity = int(request.POST.get('quantity', 1))
 
+    except (TypeError, ValueError):
 
-    quantity = int(request.POST.get('quantity', 1))                                                
+        quantity = -1
 
-    if quantity < 1:
+    minimum = 0 if operation == 'set' else 1
 
-        messages.error(request, "Количество должно быть больше 0.")
+    if operation not in {'add', 'set'} or quantity < minimum:
+
+        message = "Укажите корректное количество товара."
+
+        if is_ajax:
+
+            return JsonResponse({'success': False, 'message': message}, status=400)
+
+        messages.error(request, message)
 
         return redirect('delivery_app:product_list')
 
+    with transaction.atomic():
 
+        cart_item = CartItem.objects.select_for_update().filter(
 
-    cart_item, created = CartItem.objects.get_or_create(user=request.user, product=product)
+            user=request.user,
 
-    if created:
+            product=product,
 
-        cart_item.quantity = quantity
+        ).first()
 
-    else:
+        current_quantity = cart_item.quantity if cart_item else 0
 
-        cart_item.quantity += quantity
+        new_quantity = quantity if operation == 'set' else current_quantity + quantity
 
-    cart_item.save()
+        if new_quantity > product.stock:
+
+            message = f"В наличии только {product.stock} шт."
+
+            if is_ajax:
+
+                return JsonResponse({
+
+                    'success': False,
+
+                    'message': message,
+
+                    'quantity': current_quantity,
+
+                }, status=400)
+
+            messages.error(request, message)
+
+            return redirect('delivery_app:product_list')
+
+        if new_quantity == 0:
+
+            if cart_item:
+
+                cart_item.delete()
+
+        elif cart_item:
+
+            cart_item.quantity = new_quantity
+
+            cart_item.save(update_fields=['quantity'])
+
+        else:
+
+            CartItem.objects.create(user=request.user, product=product, quantity=new_quantity)
+
+    if is_ajax:
+
+        cart_summary = CartItem.objects.filter(user=request.user).aggregate(
+
+            items=Count('id'),
+
+            total=Sum('quantity'),
+
+        )
+
+        return JsonResponse({
+
+            'success': True,
+
+            'product_id': product.id,
+
+            'quantity': new_quantity,
+
+            'cart_count': cart_summary['items'],
+
+            'cart_total_quantity': cart_summary['total'] or 0,
+
+        })
 
     messages.success(request, f"{product.name} добавлен в корзину.")
 
@@ -639,6 +826,8 @@ def cart(request):
     cart_items = CartItem.objects.filter(user=request.user)
 
     total_price = sum(item.total_price for item in cart_items)
+
+    total_quantity = sum(item.quantity for item in cart_items)
 
 
 
@@ -657,6 +846,8 @@ def cart(request):
         'cart_items': cart_items,
 
         'total_price': total_price,
+
+        'total_quantity': total_quantity,
 
         'current_date': current_date,
 
@@ -2067,9 +2258,54 @@ def faq(request):
 
 
 
+_CYRILLIC_TO_LATIN = str.maketrans({
+    'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo',
+    'Ж': 'Zh', 'З': 'Z', 'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M',
+    'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U',
+    'Ф': 'F', 'Х': 'Kh', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh', 'Щ': 'Shch',
+    'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya',
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo',
+    'ж': 'zh', 'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm',
+    'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
+    'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch',
+    'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+})
+
+
+def _employee_name_en(name):
+    value = (name or '').strip()
+    generic_employee = re.fullmatch(r'Сотрудник\s*(\d*)', value, flags=re.IGNORECASE)
+    if generic_employee:
+        suffix = generic_employee.group(1)
+        return f'Employee {suffix}'.strip()
+    return value.translate(_CYRILLIC_TO_LATIN)
+
+
+def _employee_position_labels(position):
+    value = (position or '').strip()
+    positions = {
+        'order manager': ('Менеджер заказов', 'Order manager'),
+        'менеджер заказов': ('Менеджер заказов', 'Order manager'),
+        'менеджер': ('Менеджер', 'Manager'),
+        'администратор менеджмента': ('Администратор менеджмента', 'Management administrator'),
+        'техническая поддержка': ('Техническая поддержка', 'Technical support'),
+        'отдел поддержки': ('Отдел поддержки', 'Support department'),
+    }
+    if value.casefold() in positions:
+        return positions[value.casefold()]
+    fallback = value or 'Отдел поддержки'
+    return fallback, _employee_name_en(fallback)
+
+
 def contacts(request):
 
-    employees = Employee.objects.all()
+    employees = list(Employee.objects.select_related('user').all())
+
+    for employee in employees:
+        name = employee.get_full_name() or (employee.user.username if employee.user else 'Сотрудник')
+        employee.display_name_ru = name
+        employee.display_name_en = _employee_name_en(name)
+        employee.display_position_ru, employee.display_position_en = _employee_position_labels(employee.position)
 
     context = {
 

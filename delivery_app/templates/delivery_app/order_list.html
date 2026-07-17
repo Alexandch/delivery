@@ -1,50 +1,152 @@
 {% extends "delivery_app/base.html" %}
+{% load static %}
 
-{% block title %}
-Мои заказы
+{% block title %}Мои заказы{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'delivery_app/css/pages/order-list.css' %}">
 {% endblock %}
 
 {% block content %}
-<h2>Мои заказы</h2>
-<p>Дата: {{ current_date }} | Временная зона: {{ timezone }}</p>
+<main class="orders-page">
+    <section class="orders-hero">
+        <div class="orders-hero-copy">
+            <span class="orders-eyebrow">
+                <svg aria-hidden="true"><use href="#icon-orders"></use></svg>
+                История покупок
+            </span>
+            <h1>Мои заказы</h1>
+            <p>Следите за статусом, способом доставки и оплатой в одном месте.</p>
+        </div>
+        <a href="{% url 'delivery_app:product_list' %}" class="orders-catalog-link">
+            Перейти в каталог
+            <svg aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+        </a>
+    </section>
 
-{% if orders %}
-    <table border="1">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Дата заказа</th>
-                <th>Статус</th>
-                <th>Общая стоимость</th>
-                <th>Действия</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for order in orders %}
-            <tr>
-                <td>{{ order.id }}</td>
-                <td>{{ order.date_ordered|date:'d/m/Y' }}</td>
-                <td>{{ order.status }}</td>
-                <td>{{ order.total_cost|floatformat:2 }} BYN</td>
-                <td><a href="{% url 'delivery_app:order_detail' order.id %}">Подробнее</a></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-{% else %}
-    <p>У вас нет заказов.</p>
-{% endif %}
+    <section class="orders-summary" aria-label="Сводка по заказам">
+        <article class="orders-summary-card">
+            <span class="summary-icon"><svg aria-hidden="true"><use href="#icon-orders"></use></svg></span>
+            <div><strong>{{ orders_total }}</strong><span>Всего заказов</span></div>
+        </article>
+        <article class="orders-summary-card is-active">
+            <span class="summary-icon"><svg aria-hidden="true"><use href="#icon-clock"></use></svg></span>
+            <div><strong>{{ orders_active }}</strong><span>В работе</span></div>
+        </article>
+        <article class="orders-summary-card is-delivered">
+            <span class="summary-icon"><svg aria-hidden="true"><use href="#icon-shield"></use></svg></span>
+            <div><strong>{{ orders_delivered }}</strong><span>Доставлено</span></div>
+        </article>
+        <article class="orders-summary-card is-amount">
+            <span class="summary-icon"><svg aria-hidden="true"><use href="#icon-cart"></use></svg></span>
+            <div><strong>{{ orders_amount|floatformat:2 }} BYN</strong><span>Сумма заказов</span></div>
+        </article>
+    </section>
 
-<h3>Календарь на {{ current_date|slice:"3:10" }}</h3>
-<table border="1">
-    {% for week in calendar %}
-    <tr>
-        {% for day in week %}
-        <td{% if day == 0 %} class="empty"{% endif %}>
-            {{ day|default:"" }}
-        </td>
+    <section class="orders-toolbar">
+        <div>
+            <span class="section-kicker">Ваши покупки</span>
+            <h2>История заказов</h2>
+        </div>
+        <form method="get" class="orders-filters">
+            <label>
+                <span>Поиск</span>
+                <input type="search" name="q" value="{{ search_query }}" placeholder="Номер заказа или адрес">
+            </label>
+            <label>
+                <span>Статус</span>
+                <select name="status">
+                    <option value="">Все статусы</option>
+                    <option value="pending"{% if status_filter == 'pending' %} selected{% endif %}>В ожидании</option>
+                    <option value="shipped"{% if status_filter == 'shipped' %} selected{% endif %}>Отправлен</option>
+                    <option value="delivered"{% if status_filter == 'delivered' %} selected{% endif %}>Доставлен</option>
+                    <option value="canceled"{% if status_filter == 'canceled' %} selected{% endif %}>Отменен</option>
+                </select>
+            </label>
+            <button type="submit" class="orders-filter-submit">Показать</button>
+            {% if status_filter or search_query %}
+            <a href="{% url 'delivery_app:order_list' %}" class="orders-filter-reset">Сбросить</a>
+            {% endif %}
+        </form>
+    </section>
+
+    {% if orders %}
+    <section class="orders-list" aria-label="Список заказов">
+        {% for order in orders %}
+        <article class="order-card">
+            <div class="order-card-main">
+                <div class="order-number">
+                    <span>Заказ</span>
+                    <strong>#{{ order.id }}</strong>
+                </div>
+                <div class="order-meta-item">
+                    <span>Дата заказа</span>
+                    <strong>{{ order.date_ordered|date:'d.m.Y' }}</strong>
+                    <small>{{ order.date_ordered|date:'H:i' }}</small>
+                </div>
+                <div class="order-meta-item">
+                    <span>Получение</span>
+                    <strong>{% if order.delivery_method == 'courier' %}Курьер{% else %}Самовывоз{% endif %}</strong>
+                    {% if order.delivery_address %}<small>{{ order.delivery_address }}</small>{% endif %}
+                </div>
+                <div class="order-meta-item">
+                    <span>Товаров</span>
+                    <strong>{{ order.items_total|floatformat:-2 }}</strong>
+                    <small>позиций: {{ order.orderitem_set.all|length }}</small>
+                </div>
+            </div>
+
+            <div class="order-card-side">
+                <div class="order-statuses">
+                    <span class="status-pill status-{{ order.status_key }}">
+                        {% if order.status_key == 'shipped' %}Отправлен
+                        {% elif order.status_key == 'delivered' %}Доставлен
+                        {% elif order.status_key == 'canceled' %}Отменен
+                        {% else %}В ожидании{% endif %}
+                    </span>
+                    <span class="payment-pill payment-{{ order.payment_key }}">
+                        {% if order.payment_key == 'paid' %}Оплачено
+                        {% elif order.payment_key == 'failed' %}Ошибка оплаты
+                        {% else %}Ожидает оплаты{% endif %}
+                    </span>
+                </div>
+                <div class="order-total">
+                    <span>Итого</span>
+                    <strong>{{ order.total_cost|floatformat:2 }} BYN</strong>
+                </div>
+                <a href="{% url 'delivery_app:order_detail' order.id %}" class="order-details-link">
+                    Подробнее
+                    <svg aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+                </a>
+            </div>
+        </article>
         {% endfor %}
-    </tr>
-    {% endfor %}
-</table>
+    </section>
+
+    {% if is_paginated %}
+    <nav class="orders-pagination" aria-label="Навигация по заказам">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}">Назад</a>
+        {% endif %}
+        <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}">Далее</a>
+        {% endif %}
+    </nav>
+    {% endif %}
+    {% else %}
+    <section class="orders-empty">
+        <span><svg aria-hidden="true"><use href="#icon-orders"></use></svg></span>
+        {% if status_filter or search_query %}
+        <h2>Заказы не найдены</h2>
+        <p>Попробуйте изменить параметры поиска или сбросить фильтр.</p>
+        <a href="{% url 'delivery_app:order_list' %}">Сбросить фильтры</a>
+        {% else %}
+        <h2>У вас пока нет заказов</h2>
+        <p>Добавьте товары в корзину, и история покупок появится здесь.</p>
+        <a href="{% url 'delivery_app:product_list' %}">Выбрать товары</a>
+        {% endif %}
+    </section>
+    {% endif %}
+</main>
 {% endblock %}

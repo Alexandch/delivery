@@ -1,701 +1,170 @@
 {% extends "delivery_app/base.html" %}
 {% load static %}
 
-{% block title %}Контакты - Доставка продуктов{% endblock %}
+{% block title %}Контакты — Продуктовая доставка{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'delivery_app/css/pages/contacts.css' %}">
+{% endblock %}
 
 {% block content %}
-<div class="contacts-simple">
-    
-    <div class="simple-header">
-        <h1>Наша команда</h1>
-        <div class="header-info">
-            <span>Актуально на: {{ current_date }}</span>
+<main class="contacts-page">
+    <section class="contacts-hero" data-contact-reveal>
+        <div class="contacts-hero__copy">
+            <span class="contacts-eyebrow">
+                <svg aria-hidden="true"><use href="#icon-phone"></use></svg>
+                КОНТАКТЫ
+            </span>
+            <h1>Всегда на связи</h1>
+            <p>Поможем с заказом, доставкой и работой сервиса — выберите удобный канал.</p>
+            <div class="contacts-hero__actions">
+                <a class="contacts-button contacts-button--primary" href="tel:+375171234567">
+                    <svg aria-hidden="true"><use href="#icon-phone"></use></svg>
+                    Позвонить
+                </a>
+                <a class="contacts-button contacts-button--secondary" href="mailto:info@product-delivery.by">
+                    <svg aria-hidden="true"><use href="#icon-mail"></use></svg>
+                    Написать
+                </a>
+            </div>
         </div>
-    </div>
 
-    
-    <div class="simple-content">
-        
-        <div class="intro-box">
-            <p><strong>Мы всегда на связи!</strong> Познакомьтесь с нашей командой профессионалов, которые готовы помочь вам с доставкой продуктов.</p>
+        <aside class="contacts-support-card" aria-label="Единый центр поддержки">
+            <span class="contacts-support-card__icon">
+                <svg aria-hidden="true"><use href="#icon-headphones"></use></svg>
+            </span>
+            <p class="contacts-support-card__label">Единый центр поддержки</p>
+            <a href="tel:+375171234567">+375 (17) 123-45-67</a>
+            <div class="contacts-support-card__status">
+                <span><svg aria-hidden="true"><use href="#icon-clock"></use></svg> Отвечаем ежедневно</span>
+                <strong><span class="contacts-status-dot"></span> Обычно отвечаем за 5 минут</strong>
+            </div>
+        </aside>
+    </section>
+
+    <section class="contact-channel-grid" aria-label="Удобный способ связи" data-contact-reveal>
+        <a class="contact-channel" href="tel:+375171234567">
+            <span class="contact-channel__icon"><svg aria-hidden="true"><use href="#icon-phone"></use></svg></span>
+            <span>
+                <small>Позвонить в поддержку</small>
+                <strong>+375 (17) 123-45-67</strong>
+            </span>
+            <svg class="contact-channel__arrow" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+        </a>
+        <a class="contact-channel" href="mailto:info@product-delivery.by">
+            <span class="contact-channel__icon"><svg aria-hidden="true"><use href="#icon-mail"></use></svg></span>
+            <span>
+                <small>Написать на почту</small>
+                <strong>info@product-delivery.by</strong>
+            </span>
+            <svg class="contact-channel__arrow" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+        </a>
+        <a class="contact-channel" href="#office">
+            <span class="contact-channel__icon"><svg aria-hidden="true"><use href="#icon-map-pin"></use></svg></span>
+            <span>
+                <small>Приехать в офис</small>
+                <strong>г. Минск, ул. Примерная, 15</strong>
+            </span>
+            <svg class="contact-channel__arrow" aria-hidden="true"><use href="#icon-arrow-right"></use></svg>
+        </a>
+    </section>
+
+    <section class="contacts-section" data-contact-reveal>
+        <div class="contacts-section__heading">
+            <div>
+                <span class="contacts-section__kicker">КОМАНДА ПОДДЕРЖКИ</span>
+                <h2>Люди, которые решают вопросы</h2>
+            </div>
+            <p>Наши сотрудники помогут с заказом, доставкой и техническими вопросами.</p>
         </div>
 
-        
-        <div class="employees-container">
+        <div class="contacts-team-grid">
             {% for employee in employees %}
-            <div class="employee-card">
-                
-                <div class="employee-main">
-                    <div class="employee-photo-container">
+                <article class="contact-person"
+                         data-name-ru="{{ employee.display_name_ru }}"
+                         data-name-en="{{ employee.display_name_en }}"
+                         data-position-ru="{{ employee.display_position_ru }}"
+                         data-position-en="{{ employee.display_position_en }}">
+                <div class="contact-person__identity">
+                    <div class="contact-person__photo">
                         {% if employee.photo %}
-                            <img src="{{ employee.photo.url }}" alt="{{ employee.user.username }}" class="employee-photo">
+                                <img src="{{ employee.photo.url }}" alt="{{ employee.display_name_ru }}">
                         {% else %}
-                            <div class="employee-photo-placeholder">
-                                <span class="placeholder-icon">👤</span>
-                            </div>
+                        <span aria-hidden="true">
+                            {% if employee.first_name %}{{ employee.first_name|first|upper }}{% elif employee.user %}{{ employee.user.username|first|upper }}{% else %}С{% endif %}
+                        </span>
                         {% endif %}
                     </div>
-                    
-                    <div class="employee-basic-info">
-                        <h3 class="employee-name">{{ employee.user.username }}</h3>
-                        <p class="employee-position">{{ employee.position }}</p>
-                        
-                        
-                        <div class="employee-department">
-                            <span class="department-badge">
-                                {% if "менедж" in employee.position.lower %}
-                                    📞 Отдел продаж
-                                {% elif "достав" in employee.position.lower %}
-                                    🚚 Служба доставки
-                                {% elif "техни" in employee.position.lower %}
-                                    🔧 Технический отдел
-                                {% elif "дирек" in employee.position.lower %}
-                                    👔 Руководство
-                                {% else %}
-                                    💼 Администрация
-                                {% endif %}
-                            </span>
-                        </div>
+                    <div>
+                        <span class="contact-person__availability"><i></i> На связи</span>
+                            <h3 class="js-employee-name">{{ employee.display_name_ru }}</h3>
+                            <p class="js-employee-position">{{ employee.display_position_ru }}</p>
                     </div>
                 </div>
 
-                
-                <div class="employee-details">
-                    
-                    <div class="contact-section">
-                        <h4>Контакты</h4>
-                        <div class="contact-grid">
-                            {% if employee.phone %}
-                            <div class="contact-items">
-                                <span class="contact-icon">📞</span>
-                                <div class="contact-infor">
-                                    <strong>Телефон</strong>
-                                    <a href="tel:{{ employee.phone }}" class="contact-link">{{ employee.phone }}</a>
-                                </div>
-                            </div>
-                            {% endif %}
-                            
-                            {% if employee.user.email %}
-                            <div class="contact-items">
-                                <span class="contact-icon">✉️</span>
-                                <div class="contact-infor">
-                                    <strong>Email</strong>
-                                    <a href="mailto:{{ employee.user.email }}" class="contact-link">{{ employee.user.email }}</a>
-                                </div>
-                            </div>
-                            {% endif %}
-                            
-                            {% if employee.work_hours %}
-                            <div class="contact-items">
-                                <span class="contact-icon">🕒</span>
-                                <div class="contact-infor">
-                                    <strong>График работы</strong>
-                                    <span>{{ employee.work_hours }}</span>
-                                </div>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    
-                    <div class="responsibilities-section">
-                        <h4>Обязанности</h4>
-                        <div class="responsibilities-list">
-                            {% if employee.description %}
-                                <p>{{ employee.description }}</p>
-                            {% else %}
-                                <div class="default-responsibilities">
-                                    {% if "менедж" in employee.position.lower %}
-                                        <span>✅ Консультирование клиентов</span>
-                                        <span>✅ Прием заказов</span>
-                                        <span>✅ Решение вопросов</span>
-                                    {% elif "достав" in employee.position.lower %}
-                                        <span>✅ Доставка заказов</span>
-                                        <span>✅ Контроль качества</span>
-                                        <span>✅ Отчетность</span>
-                                    {% elif "техни" in employee.position.lower %}
-                                        <span>✅ Поддержка сайта</span>
-                                        <span>✅ Техническое обслуживание</span>
-                                        <span>✅ Разработка улучшений</span>
-                                    {% else %}
-                                        <span>✅ Управление процессами</span>
-                                        <span>✅ Стратегическое планирование</span>
-                                        <span>✅ Контроль качества</span>
-                                    {% endif %}
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
+                <div class="contact-person__links">
+                    {% if employee.phone %}
+                    <a href="tel:{{ employee.phone }}">
+                        <svg aria-hidden="true"><use href="#icon-phone"></use></svg>
+                        <span><small>Телефон</small><strong>{{ employee.phone }}</strong></span>
+                    </a>
+                    {% endif %}
+                    {% if employee.email %}
+                    <a href="mailto:{{ employee.email }}">
+                        <svg aria-hidden="true"><use href="#icon-mail"></use></svg>
+                        <span><small>Почта</small><strong>{{ employee.email }}</strong></span>
+                    </a>
+                    {% elif employee.user and employee.user.email %}
+                    <a href="mailto:{{ employee.user.email }}">
+                        <svg aria-hidden="true"><use href="#icon-mail"></use></svg>
+                        <span><small>Почта</small><strong>{{ employee.user.email }}</strong></span>
+                    </a>
+                    {% endif %}
                 </div>
-            </div>
+
+                <div class="contact-person__help">
+                    <span>Чем поможет</span>
+                    <ul>
+                        <li><svg aria-hidden="true"><use href="#icon-check"></use></svg> Работа с обращениями</li>
+                        <li><svg aria-hidden="true"><use href="#icon-check"></use></svg> Контроль качества сервиса</li>
+                    </ul>
+                </div>
+            </article>
             {% empty %}
-            <div class="empty-state">
-                <div class="empty-icon">👥</div>
+            <div class="contacts-empty">
+                <svg aria-hidden="true"><use href="#icon-users"></use></svg>
                 <h3>Сотрудников пока нет</h3>
                 <p>Информация о нашей команде скоро появится</p>
             </div>
             {% endfor %}
         </div>
+    </section>
 
-        
-        <div class="company-contacts">
-            <h2>Контактная информация компании</h2>
-            <div class="contact-cards-grid">
-                <div class="company-contact-card">
-                    <div class="card-header">
-                        <div class="card-icon">🏢</div>
-                        <h4>Адрес офиса</h4>
-                    </div>
-                    <div class="card-content">
-                        <p>г. Минск, ул. Примерная, 15</p>
-                        <div class="work-hours">
-                            <span>Пн-Пт: 9:00-18:00</span>
-                            <span>Сб-Вс: 10:00-16:00</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="company-contact-card">
-                    <div class="card-header">
-                        <div class="card-icon">📞</div>
-                        <h4>Телефоны</h4>
-                    </div>
-                    <div class="card-content">
-                        <a href="tel:+375171234567">+375 (17) 123-45-67</a>
-                        <small>Единый call-центр</small>
-                        <a href="tel:+375171234568">+375 (17) 123-45-68</a>
-                        <small>Отдел доставки</small>
-                    </div>
-                </div>
-                
-                <div class="company-contact-card">
-                    <div class="card-header">
-                        <div class="card-icon">✉️</div>
-                        <h4>Электронная почта</h4>
-                    </div>
-                    <div class="card-content">
-                        <a href="mailto:info@product-delivery.by">info@product-delivery.by</a>
-                        <small>Общие вопросы</small>
-                        <a href="mailto:delivery@product-delivery.by">delivery@product-delivery.by</a>
-                        <small>Вопросы доставки</small>
-                    </div>
-                </div>
-                
-                <div class="company-contact-card">
-                    <div class="card-header">
-                        <div class="card-icon">🌐</div>
-                        <h4>Социальные сети</h4>
-                    </div>
-                    <div class="card-content">
-                        <div class="social-links2">
-                            <a href="#" class="social-link2">📘 Facebook</a>
-                            <a href="#" class="social-link2">📷 Instagram</a>
-                            <a href="#" class="social-link2">🐦 Twitter</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <section class="contacts-office" id="office" data-contact-reveal>
+        <div class="contacts-office__intro">
+            <span class="contacts-section__kicker">ОФИС И РЕКВИЗИТЫ</span>
+            <h2>Заходите или свяжитесь напрямую</h2>
+            <p>Помощь с заказами, доставкой и работой сайта.</p>
+            <a class="contacts-button contacts-button--primary" href="{% url 'delivery_app:about' %}#contacts">
+                <svg aria-hidden="true"><use href="#icon-route"></use></svg>
+                Построить маршрут
+            </a>
         </div>
-    </div>
-</div>
 
-<style>
-.contacts-simple * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-.contacts-simple {
-    max-width: 1200px;
-    margin: 80px auto 40px;
-    padding: 0 20px;
-    font-family: 'Inter', Arial, sans-serif;
-    line-height: 1.5;
-}
-
-
-.simple-header {
-    background: #9dc4ff;
-    color: white;
-    padding: 25px 30px;
-    border-radius: 8px;
-    margin-bottom: 30px;
-    text-align: center;
-}
-
-.simple-header h1 {
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 10px;
-}
-
-.header-info {
-    font-size: 14px;
-    opacity: 0.9;
-}
-
-
-.simple-content {
-    background: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 30px;
-}
-
-
-.intro-box {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 6px;
-    border-left: 4px solid #2c5aa0;
-    margin-bottom: 30px;
-    text-align: center;
-}
-
-.intro-box p {
-    margin: 0;
-    color: #333;
-    font-size: 16px;
-}
-
-.employees-container {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-    margin-bottom: 40px;
-}
-
-
-.employee-card {
-    display: flex;
-    gap: 30px;
-    background: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    padding: 30px;
-    transition: all 0.3s ease;
-    align-items: flex-start;
-}
-
-.employee-card:hover {
-    border-color: #2c5aa0;
-    box-shadow: 0 6px 20px rgba(44, 90, 160, 0.1);
-    transform: translateY(-3px);
-}
-
-
-.employee-main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    flex: 0 0 200px;
-}
-
-.employee-photo-container {
-    display: flex;
-    justify-content: center;
-}
-
-.employee-photo {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid #f0f0f0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.employee-photo-placeholder {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 4px solid #e0e0e0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.placeholder-icon {
-    font-size: 36px;
-    opacity: 0.5;
-}
-
-.employee-basic-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    text-align: center;
-}
-
-.employee-name {
-    color: #2c5aa0;
-    font-size: 20px;
-    font-weight: 600;
-    margin: 0;
-}
-
-.employee-position {
-    color: #666;
-    font-size: 16px;
-    font-weight: 500;
-    margin: 0;
-}
-
-.employee-department {
-    margin-top: 5px;
-}
-
-.department-badge {
-    background: #e3f2fd;
-    color: #2c5aa0;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-    border: 1px solid #bbdefb;
-}
-
-
-.employee-details {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-    flex: 1;
-}
-
-.contact-section h4,
-.responsibilities-section h4 {
-    color: #4370b4;
-    font-size: 16px;
-    margin-bottom: 15px;
-    font-weight: 600;
-}
-
-
-.contact-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.contact-items {
-    display: flex;
-    align-items: flex-start;
-    gap: 15px;
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border-left: 3px solid #99c2ff;
-}
-
-.contact-icon {
-    font-size: 16px;
-    margin-top: 2px;
-    flex-shrink: 0;
-}
-
-.contact-infor {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.contact-infor strong {
-    color: #333;
-    font-size: 13px;
-}
-
-.contact-link {
-    color: #90bcff;
-    text-decoration: none;
-    font-size: 14px;
-    transition: color 0.2s ease;
-}
-
-.contact-link:hover {
-    color: #92bcff;
-    text-decoration: underline;
-}
-
-
-.responsibilities-list p {
-    margin: 0;
-    color: #333;
-    line-height: 1.6;
-}
-
-.default-responsibilities {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.default-responsibilities span {
-    color: #333;
-    font-size: 14px;
-}
-
-
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: #666;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border: 2px dashed #e0e0e0;
-}
-
-.empty-icon {
-    font-size: 48px;
-    margin-bottom: 15px;
-    opacity: 0.5;
-}
-
-.empty-state h3 {
-    color: #333;
-    margin-bottom: 10px;
-}
-
-
-.company-contacts {
-    margin-top: 50px;
-    padding-top: 40px;
-    border-top: 2px solid #f0f0f0;
-}
-
-.company-contacts h2 {
-    color: #3162ac;
-    text-align: center;
-    margin-bottom: 30px;
-    font-size: 22px;
-}
-
-.contact-cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-}
-
-.company-contact-card {
-    background: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 10px;
-    padding: 25px;
-    transition: all 0.3s ease;
-}
-
-.company-contact-card:hover {
-    border-color: #8ab9ff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.card-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 15px;
-}
-
-.card-icon {
-    font-size: 24px;
-}
-
-.card-header h4 {
-    color: #84b5ff;
-    margin: 0;
-    font-size: 16px;
-}
-
-.card-content {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.card-content a {
-    color: #2c5aa0;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s ease;
-}
-
-.card-content a:hover {
-    color: #1e3d6f;
-    text-decoration: underline;
-}
-
-.card-content small {
-    color: #666;
-    font-size: 12px;
-    margin-top: -5px;
-}
-
-.work-hours {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.social-links2 {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.social-link2 {
-    color: #2c5aa0;
-    text-decoration: none;
-    padding: 6px 0;
-    transition: color 0.2s ease;
-}
-
-.social-link2:hover {
-    color: #1e3d6f;
-}
-
-
-@media (max-width: 768px) {
-    .contacts-simple {
-        margin: 70px auto 30px;
-        padding: 0 15px;
-    }
-    
-    .simple-header {
-        padding: 20px;
-    }
-    
-    .simple-header h1 {
-        font-size: 20px;
-    }
-    
-    .simple-content {
-        padding: 20px;
-    }
-    
-    
-    .employee-card {
-        flex-direction: column;
-        gap: 20px;
-        padding: 20px;
-    }
-    
-    .employee-main {
-        flex: none;
-        width: 100%;
-    }
-    
-    .employee-basic-info {
-        width: 100%;
-    }
-    
-    .contact-cards-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .contact-items {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
-    }
-}
-
-@media (max-width: 480px) {
-    .simple-header {
-        padding: 15px;
-    }
-    
-    .simple-content {
-        padding: 15px;
-    }
-    
-    .intro-box {
-        padding: 15px;
-    }
-    
-    .employee-card {
-        padding: 15px;
-    }
-    
-    .employee-photo,
-    .employee-photo-placeholder {
-        width: 100px;
-        height: 100px;
-    }
-    
-    .company-contact-card {
-        padding: 20px;
-    }
-}
-
-
-.employee-card {
-    transition: all 0.3s ease;
-}
-
-.company-contact-card {
-    transition: all 0.3s ease;
-}
-
-.contact-link {
-    transition: color 0.2s ease;
-}
-
-
-::selection {
-    background-color: #2c5aa0;
-    color: white;
-}
-
-::-moz-selection {
-    background-color: #2c5aa0;
-    color: white;
-}
-
-.contacts-simple {
-    width: 100%;
-    margin: 18px auto 54px;
-    padding: 0;
-}
-
-.contacts-simple .simple-header {
-    padding: 24px;
-    border: 1px solid #dce8f3;
-    border-radius: 18px;
-    background: linear-gradient(135deg, #fff 0%, #eef7ff 100%);
-    color: #17395d;
-    text-align: left;
-    box-shadow: 0 16px 45px rgba(31, 56, 88, .08);
-}
-
-.contacts-simple .simple-header h1 {
-    color: #17395d;
-    font-size: clamp(1.65rem, 3vw, 2.25rem);
-    line-height: 1.1;
-    text-transform: none;
-}
-
-.contacts-simple .header-info {
-    display: inline-flex;
-    margin-top: 8px;
-    padding: 7px 11px;
-    border-radius: 999px;
-    background: #e8f7ef;
-    color: #18794e;
-    font-weight: 750;
-    opacity: 1;
-}
-
-@media (max-width: 768px) {
-    .contacts-simple {
-        margin: 12px auto 42px;
-        padding: 0;
-    }
-}
-</style>
+        <div class="contacts-office__details">
+            <article>
+                <span class="contacts-office__icon"><svg aria-hidden="true"><use href="#icon-map-pin"></use></svg></span>
+                <div><small>Адрес и график работы</small><strong>г. Минск, ул. Примерная, 15</strong><p>Пн–Пт: 9:00–18:00<br>Сб–Вс: 10:00–16:00</p></div>
+            </article>
+            <article>
+                <span class="contacts-office__icon"><svg aria-hidden="true"><use href="#icon-mail"></use></svg></span>
+                <div><small>Общие вопросы и помощь с заказом</small><a href="mailto:info@product-delivery.by">info@product-delivery.by</a><a href="mailto:delivery@product-delivery.by">delivery@product-delivery.by</a></div>
+            </article>
+        </div>
+    </section>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'delivery_app/js/pages/contacts.js' %}?v=20260717-1" defer></script>
 {% endblock %}

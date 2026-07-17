@@ -1,6 +1,6 @@
 
 :root {
-    
+
     --primary-color: #2c5aa0;
     --primary-dark: #1e3d6f;
     --primary-light: #3a6bc0;
@@ -641,35 +641,35 @@ a:hover {
     .container {
         padding: 0 15px;
     }
-    
+
     h1 {
         font-size: 2em;
     }
-    
+
     h2 {
         font-size: 1.75em;
     }
-    
+
     .section {
         padding: 40px 0;
     }
-    
+
     .col-6,
     .col-4,
     .col-3 {
         flex: 0 0 100%;
         margin-bottom: 1rem;
     }
-    
+
     .dashboard-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .profile-stats {
         flex-direction: column;
         gap: 1rem;
     }
-    
+
     .navbar-nav {
         text-align: center;
     }
@@ -680,11 +680,11 @@ a:hover {
         padding: 10px 20px;
         font-size: 0.9em;
     }
-    
+
     .auth-card {
         margin: 1rem;
     }
-    
+
     .card-body {
         padding: 15px;
     }
